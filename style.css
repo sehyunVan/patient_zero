@@ -570,6 +570,7 @@ dialog.character-screen{width:min(1160px,calc(100vw - 28px));height:min(790px,ca
 .secondary-start{display:block;margin-top:9px;padding:9px 14px;font-size:11px;color:#c3ccd8;
   border:1px solid #ffffff24;border-radius:3px;background:#070d16a8;backdrop-filter:blur(6px)}
 .secondary-start:hover{color:#fff;border-color:#ff5c66aa}
+body:not([data-mode=intro]) #login{display:none}
 #login-dialog{width:min(430px,calc(100% - 40px))}
 .login-state{font-size:11px;line-height:1.7;color:#cfd8e2;background:#0c1420;border:1px solid #ffffff1a;padding:10px 12px;margin-bottom:12px}
 .login-methods{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
