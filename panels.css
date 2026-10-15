@@ -35,3 +35,40 @@
 /* Dispatch and signal center share the main utility panel shell. */
 .dispatch-summary{display:flex;justify-content:space-between;align-items:center;padding:17px 22px;margin-bottom:20px;border-bottom:1px solid #657fa44d;background:#030b17ba;color:#a4bad6;font-size:13px}.dispatch-summary b{font:600 25px 'Barlow Condensed',sans-serif;margin-left:10px;color:#f0f5ff}.dispatch-read{color:#f75576;font-size:12px}.utility-panel .dispatch-letter{position:relative;max-width:none;background:linear-gradient(115deg,#101b2be8,#050c17e0);border:1px solid #6381a65e;border-top:2px solid #ed345d;padding:34px;clip-path:polygon(12px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 12px)}.utility-panel .dispatch-letter>small{font:10px monospace;letter-spacing:1.5px;color:#ed6a87}.utility-panel .dispatch-letter h3{font-size:27px;margin:20px 0 27px;max-width:75%;line-height:1.5;color:#f0f5ff}.utility-panel .dispatch-letter p{font-size:14px;line-height:2;color:#aebfd6;max-width:790px;margin:0 0 20px;word-break:keep-all}.utility-panel .dispatch-letter>small:last-child{display:block;margin-top:30px;border-top:1px solid #6d85a333;padding-top:18px;color:#7792b4;font-size:10px}.dispatch-stamp{position:absolute;right:30px;top:26px;display:flex;gap:9px;align-items:center;color:#67809f;opacity:.8}.dispatch-stamp svg{width:28px;height:28px}.dispatch-stamp span{font:9px/1.7 monospace;letter-spacing:1px}.signal-summary{display:flex;align-items:center;gap:24px;padding:28px;margin-bottom:22px;border:1px solid #e82c5666;background:linear-gradient(110deg,#4c1431a6,#060e1bcb);clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)}.signal-emblem{width:60px;height:60px;display:grid;place-items:center;border:1px solid #f1375e55;background:#ed31551a;color:#ff4268;flex:none}.signal-emblem svg{width:30px;height:30px}.signal-summary>div:nth-child(2){flex:1}.signal-summary small{font:9px monospace;letter-spacing:2px;color:#ee6a89}.signal-summary h3{font-size:24px;line-height:1.4;margin:10px 0;color:#eef4ff}.signal-summary p{font-size:12px;line-height:1.7;color:#a6b8d1;margin:0}.signal-summary>strong{font:600 48px 'Barlow Condensed',sans-serif;color:#ff4268;text-align:center;flex:none}.signal-summary>strong small{display:block;margin-top:4px;font:10px 'Malgun Gothic',sans-serif;letter-spacing:0;color:#9cb2ce}.signal-list{display:grid;gap:18px}.signal-card{display:flex;align-items:center;text-align:left;gap:22px;width:100%;padding:26px;background:linear-gradient(125deg,#0d1b2bd9,#030b17e0);border:1px solid #6683a655;color:#c6d5e9;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}.signal-card.available{border-color:#fa335b99;background:linear-gradient(120deg,#3a1731ad,#06101bd9)}.signal-card:hover{border-color:#f13b6388;background-color:#152439}.signal-icon{width:48px;height:48px;display:grid;place-items:center;border:1px solid #6785a749;color:#8da9ce;flex:none}.signal-icon svg{width:26px;height:26px}.available .signal-icon{color:#ff4166;border-color:#f13b634d}.signal-copy{display:flex;flex-direction:column;gap:10px;flex:1}.signal-copy>small{font:9px monospace;letter-spacing:1.5px;color:#6f91b7}.signal-copy>strong{font-size:20px;color:#edf3fd}.signal-copy>span{font-size:12px;color:#98aecb}.signal-count{font:600 25px 'Barlow Condensed',sans-serif;text-align:right;color:#b3c6df}.available .signal-count{color:#ff4268}.signal-count small{font:11px 'Malgun Gothic',sans-serif;display:block;margin-top:7px;color:#91a9c9}.signal-card>b{font-size:28px;margin-left:7px;color:#7c98ba}.signal-note{color:#819ab9;font-size:11px;margin-top:20px;line-height:1.7}
 @media(max-height:500px),(max-width:850px){.dispatch-summary{padding:10px 14px;font-size:10px;margin-bottom:14px}.dispatch-summary b{font-size:19px}.dispatch-read{font-size:9px}.utility-panel .dispatch-letter{padding:20px}.dispatch-stamp{right:16px;top:18px}.dispatch-stamp span{display:none}.dispatch-stamp svg{width:22px;height:22px}.utility-panel .dispatch-letter h3{font-size:19px;margin:16px 0;max-width:90%}.utility-panel .dispatch-letter p{font-size:11px;line-height:1.9}.utility-panel .dispatch-letter>small{font-size:8px}.signal-summary{padding:17px;gap:14px;margin-bottom:14px}.signal-emblem{width:38px;height:38px}.signal-emblem svg{width:21px;height:21px}.signal-summary h3{font-size:17px}.signal-summary p{font-size:10px}.signal-summary small{font-size:7px}.signal-summary>strong{font-size:34px}.signal-summary>strong small{font-size:8px}.signal-card{padding:17px;gap:13px}.signal-icon{width:34px;height:34px}.signal-icon svg{width:20px;height:20px}.signal-copy>strong{font-size:15px}.signal-copy>small{font-size:7px}.signal-copy>span{font-size:10px}.signal-copy{gap:7px}.signal-count{font-size:20px}.signal-count small{font-size:9px}.signal-note{font-size:9px}}
+
+/* 우편함 · 알림 — 메뉴 기둥 없이 글만. 읽는 화면이라 칸을 줄여 한 눈에 들어오게 한다.
+   (여기 숫자가 커서 「어르신용 게임 같다」는 말을 들었다 — 2026-10-15) */
+#info-dialog.utility-panel.no-rail #dialog-content{grid-template-columns:minmax(0,1fr)!important}
+.no-rail .utility-nav{display:none}
+.no-rail .utility-body{grid-column:1!important}
+.no-rail .utility-header{padding:12px 16px}
+.no-rail .utility-header h2{font-size:17px!important;margin:2px 0!important}
+.no-rail .utility-header p{font-size:9px}
+.no-rail .utility-body{padding:14px 16px}
+.no-rail .lobby-notice{padding:13px 15px}
+.no-rail .lobby-notice h3{font-size:14px;margin:9px 0}
+.no-rail .lobby-notice p{font-size:10.5px;line-height:1.7;margin:7px 0}
+.no-rail .lobby-notice small{font-size:8px}
+.no-rail .dispatch-summary{font-size:10px;padding:7px 10px}
+.no-rail .dispatch-stamp{transform:scale(.8);transform-origin:left top}
+.no-rail .signal-summary{padding:12px 14px;gap:12px}
+.no-rail .signal-summary h3{font-size:14px;margin:3px 0}
+.no-rail .signal-summary p{font-size:10px}
+.no-rail .signal-summary strong{font-size:26px}
+.no-rail .signal-summary strong small{font-size:8px}
+.no-rail .signal-emblem{width:34px;height:34px}
+.no-rail .signal-emblem svg{width:19px;height:19px}
+.no-rail .signal-card{padding:10px 12px;min-height:0}
+.no-rail .signal-card strong,.no-rail .signal-card b{font-size:11.5px}
+.no-rail .signal-card small,.no-rail .signal-card span{font-size:9px}
+.no-rail .signal-icon{width:28px;height:28px}
+.no-rail .signal-icon svg{width:16px;height:16px}
+@media(max-height:480px){
+  .no-rail .utility-header{padding:9px 12px}
+  .no-rail .utility-body{padding:10px 12px}
+  .no-rail .lobby-notice{padding:10px 11px}
+  .no-rail .lobby-notice h3{font-size:12px;margin:6px 0}
+  .no-rail .lobby-notice p{font-size:9.5px;line-height:1.6;margin:5px 0}
+  .no-rail .signal-card{padding:8px 10px}
+  .no-rail .signal-summary strong{font-size:21px}
+}

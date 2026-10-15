@@ -338,7 +338,7 @@ const GRAIN = (() => {
 })();
 
 const HITS = [
-  { t:2.00,  f:.10, sh:4,  ab:3,  c:'#e8142d' },
+  { t:2.00,  f:.09, sh:4,  ab:1.8, c:'#e8142d' },
   { t:4.50,  f:.30, sh:9,  ab:8 },
   { t:6.00,  f:.62, sh:17, ab:15 },
   { t:8.00,  f:.28, sh:10, ab:7 },
@@ -554,30 +554,39 @@ function s2(t) {
   for (let y=0;y<=H;y+=80) { bx.beginPath(); bx.moveTo(0,y+.5); bx.lineTo(W,y+.5); bx.stroke(); }
   bx.restore();
 
-  /* 카메라 — 천천히 밀고 들어간다 */
-  const push = lerp(1.0, 1.15, E.io(u));
+  /* 물결이 화면을 다 먹고 나면 볼 게 없어진다 — 그때부터는 주제를 '숫자'로 옮긴다.
+     벌판은 어두운 바탕으로 물러나고, 세던 수가 가운데로 올라와 커진다. */
+  const toC = E.io4(seg(t, 3.86, 4.42));
+  const dim = lerp(1, .30, toC);
+
+  const push = lerp(1.0, 1.26, E.io(u));
   bx.save(); bx.translate(W/2,H/2); bx.scale(push,push); bx.translate(-W/2,-H/2);
   const p = FIELD.timeAtFrac(CURVE(u));                /* 느리게 → 터지고 → 포화. 진짜 유행 곡선 */
-  drawField(bx, p, { dim:1 });
+  drawField(bx, p, { dim });
   bx.restore();
 
   /* 숫자 — 모형이 센 그대로 */
   const n = FIELD.countAt(p);
   const s = String(n).padStart(6,'0');
   const na = E.out(seg(t,2.08,2.4));
-  bx.save(); bx.globalAlpha = na;
-  hairline(bx, 132, H-188, 132+Math.min(700, measure(bx,'X',{size:1})+660), .22);
+  const side = na * (1-E.out(seg(t,3.86,4.14)));       /* 옆에 붙어 있던 자잘한 것들은 먼저 걷는다 */
+  bx.save(); bx.globalAlpha = side;
+  hairline(bx, 132, H-188, 832, .22);
   txt(bx, COPY.subject==='검체'?'감염자 수':'INFECTED', 132, H-212, { size:17, w:600, ls:7, fill:rgba(255,255,255,.55), it:false });
-  digits(bx, s, 132, H-96, { size:128, fill:'#fff', adv:62 });
-  /* 증가율 막대 */
-  const barW = 700 * clamp(n/FIELD.N);
   bx.fillStyle = rgba(255,255,255,.1); bx.fillRect(132, H-70, 700, 2);
-  bx.fillStyle = RED; bx.fillRect(132, H-70, barW, 2);
+  bx.fillStyle = RED; bx.fillRect(132, H-70, 700*clamp(n/FIELD.N), 2);
   txt(bx, 'R0 2.4', 832, H-212, { size:17, w:600, ls:7, fill:rgba(232,20,45,.9), align:'right', it:false, fam:CDF });
+  bx.restore();
+  /* 수는 남아서 가운데로 올라온다 */
+  bx.save(); bx.globalAlpha = na;
+  digits(bx, s, lerp(318, W/2, toC), lerp(H-96, H/2+82, toC),
+    { size: lerp(128, 244, toC), adv: lerp(62, 118, toC), fill:'#fff', align:'center' });
+  if (toC > .02) txt(bx, COPY.subject==='검체'?'감염자 수':'INFECTED', W/2, H/2-172, {
+    size:22, w:600, ls:11, fill:rgba(255,255,255,.55*toC), align:'center', it:false });
   bx.restore();
 
   /* 오른쪽 위 — 시간 */
-  const ta = E.out(seg(t,2.3,2.7));
+  const ta = E.out(seg(t,2.3,2.7)) * (1-E.out(seg(t,3.86,4.14)));
   const hh = String(Math.floor(u*11)).padStart(2,'0'), mm = String(Math.floor((u*11%1)*60)).padStart(2,'0');
   bx.save(); bx.globalAlpha = ta;
   txt(bx, 'ELAPSED', W-132, 142, { size:17, w:600, ls:7, fill:rgba(255,255,255,.5), align:'right', it:false, fam:CDF });
@@ -595,7 +604,7 @@ function buildWord() {
     g.fillText('PATIENT', W/2, H/2 - 118);
     g.fillText('ZERO',    W/2, H/2 + 128);
   };
-  WORDPTS = samplePoints(draw, 9, 1700);
+  WORDPTS = samplePoints(draw, 7, 2800);
   /* 가장 가까운 알갱이를 붙인다 — 적게 움직일수록 자연스럽다 */
   const used = new Uint8Array(FIELD.N);
   const cand = FIELD.order;
@@ -645,8 +654,8 @@ function s3(t) {
     bx.save(); bx.globalAlpha = solid;
     bx.textAlign='center'; bx.textBaseline='middle';
     bx.font = `italic 900 262px ${CDF}`; bx.letterSpacing = '-4px';
-    bx.fillStyle = RED;                                   /* 뒤로 살짝 밀린 붉은 겹 */
-    bx.fillText('PATIENT', W/2+9, H/2-118+5); bx.fillText('ZERO', W/2+9, H/2+128+5);
+    bx.fillStyle = '#a80d1e';                             /* 뒤로 살짝 밀린 붉은 겹 */
+    bx.fillText('PATIENT', W/2+7, H/2-118+4); bx.fillText('ZERO', W/2+7, H/2+128+4);
     bx.fillStyle = '#fff';
     bx.fillText('PATIENT', W/2, H/2-118); bx.fillText('ZERO', W/2, H/2+128);
     bx.restore();
@@ -778,7 +787,10 @@ function s5(t) {
     const ord = (col + row*1.25) / (WALL_COLS + WALL_ROWS*1.25);
     const a0 = 8.02 + ord*0.56, a1 = a0 + 0.74;
     const k = E.spr(seg(t, a0, a1), 2.2, 7.2);
-    if (t >= a0 + 0.30) landed++;
+    /* 내려앉는 순간을 하나로 묶는다 — 세는 수 · 테두리 번쩍 · 음악의 틱이 모두 a0+0.30 */
+    const land = t - (a0 + 0.30);
+    const lf = (land >= 0 && land < .30) ? Math.pow(1 - land / .30, 2) : 0;
+    if (land >= 0) landed++;
     const isZ = i === 0;
     /* 제로만 앞으로 끌려 나오고 나머지는 물러난다 */
     const fz  = isZ ? focus * 560 : -focus * 150;
@@ -792,8 +804,9 @@ function s5(t) {
       `translate3d(${x + fx_}px,${y + fy_ + (1-k)*120}px,${lerp(-900,0,k) + fz}px) ` +
       `rotateY(${(1-k)*34}deg) rotateZ(${(1-k)*-5}deg) scale(${fsc})`;
     c.root.style.opacity = String(clamp(k*1.8) * dim);
-    c.pic.style.filter = blur > .2 ? `blur(${blur.toFixed(2)}px) brightness(${dim.toFixed(2)})` : `brightness(${dim.toFixed(2)})`;
-    c.rim.style.borderColor = `rgba(232,20,45,${isZ ? focus*0.95 : 0})`;
+    const br = (dim * (1 + lf * 0.55)).toFixed(2);
+    c.pic.style.filter = blur > .2 ? `blur(${blur.toFixed(2)}px) brightness(${br})` : `brightness(${br})`;
+    c.rim.style.borderColor = `rgba(232,20,45,${Math.max(isZ ? focus*0.95 : 0, lf*0.95).toFixed(3)})`;
     c.nm.style.opacity = String(isZ ? 1 : lerp(1,.4,focus));
   });
 
@@ -870,9 +883,13 @@ function s6(t) {
     const alpha = clamp(k*1.3) * o * (1-flat);
     if (alpha < .01) return;
     const P0 = proj6(ax, ay, m);
-    const len = 152 * E.out4(k);
-    const ex = P0.x + dir*len;
     const s = COPY.calls[i], fam = isKR(s) ? KRF : CDF, ls = isKR(s) ? 2.6 : 5.6;
+    /* 글이 화면 밖으로 나가지 않게 먼저 자리를 잡고, 선은 거기까지만 뻗는다 */
+    const tw = measure(fxx, s, { size:19, w:700, ls, fam });
+    const want = dir < 0 ? P0.x - 152 - 12 - tw : P0.x + 152 + 12;
+    const tx0 = clamp(want, 96, W - 96 - tw);
+    const ex = (dir < 0 ? tx0 + tw + 12 : tx0 - 12);
+    const exk = P0.x + (ex - P0.x) * E.out4(k);
     fxx.save(); fxx.globalAlpha = alpha;
     /* 짚는 점 */
     fxx.strokeStyle = RED; fxx.lineWidth = 1.6;
@@ -880,10 +897,8 @@ function s6(t) {
     fxx.fillStyle = rgba(232,20,45,.3); fxx.fill();
     /* 뻗는 선 */
     fxx.strokeStyle = rgba(255,255,255,.6); fxx.lineWidth = 1;
-    fxx.beginPath(); fxx.moveTo(P0.x + dir*8, P0.y+.5); fxx.lineTo(ex, P0.y+.5); fxx.stroke();
+    fxx.beginPath(); fxx.moveTo(P0.x + dir*8, P0.y+.5); fxx.lineTo(exk, P0.y+.5); fxx.stroke();
     /* 글 — 선이 다 뻗은 뒤 왼쪽부터 열린다 */
-    const tw = measure(fxx, s, { size:19, w:700, ls, fam });
-    const tx0 = dir < 0 ? ex - 12 - tw : ex + 12;
     const rev = E.out4(clamp((k-0.45)/0.55));
     fxx.beginPath(); fxx.rect(tx0, P0.y-26, tw*rev, 42); fxx.clip();
     txt(fxx, s, tx0, P0.y+6, { size:19, w:700, ls, fill:'#fff', fam, it:false });
@@ -918,7 +933,9 @@ function s7(t) {
   bx.save();
   bx.globalAlpha = 1/SAMP;
   for (let s=0;s<SAMP;s++) {
-    const sub = x0 + vel*(s/SAMP - .5);                  /* 셔터가 열린 동안을 여러 번 겹쳐 찍는다 = 진짜 모션블러 */
+    /* 셔터가 열린 동안을 여러 번 겹쳐 찍는다 = 진짜 모션블러.
+       180° 셔터(한 프레임의 절반)로 잡는다 — 한 프레임을 다 열면 그림이 아예 녹는다. */
+    const sub = x0 + vel*0.5*(s/SAMP - .5);
     for (let i=1;i<=19;i++) {
       const im = IMG['p'+i]; if (!im) continue;
       const px = W/2 + (i-LAND)*PSTEP + sub;

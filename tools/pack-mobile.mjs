@@ -43,7 +43,7 @@ if (!CHECK) {
 
   // 코드와 옷
   for (const f of fs.readdirSync(ROOT)) {
-    if (/\.css$/.test(f) || f === 'manifest.webmanifest') { fs.copyFileSync(path.join(ROOT, f), path.join(OUT, f)); files++; bytes += fs.statSync(path.join(OUT, f)).size; }
+    if (/\.css$/.test(f) || f === 'manifest.webmanifest' || f === 'oauth.html') { fs.copyFileSync(path.join(ROOT, f), path.join(OUT, f)); files++; bytes += fs.statSync(path.join(OUT, f)).size; }
   }
   copy(path.join(ROOT, 'js'), path.join(OUT, 'js'));
   copy(path.join(ROOT, 'i18n'), path.join(OUT, 'i18n'), n => n === 'bundle.js');

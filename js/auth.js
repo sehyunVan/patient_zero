@@ -72,6 +72,19 @@ window.Auth = (() => {
     return 'web';
   };
   const showApple = () => platform() !== 'android';
+  /* 애플 단추를 **누를 수 있는가**는 판마다 다르다.
+     웹: Services ID 가 있어야 한다(서버가 appleWeb 으로 알려 준다). 없으면 눌러도 못 간다.
+     iOS 앱: 네이티브 플러그인이 토큰을 준다 — 아직 안 붙였으므로 지금은 꺼 둔다.
+     「켜져 있는데 안 되는 단추」보다 꺼진 단추가 낫다(2026-10-15 에 그 단추를 실제로 만들었다). */
+  const appleUsable = on => platform() === 'ios'
+    ? !!(window.Capacitor?.Plugins?.SignInWithApple && on.apple)
+    : !!on.appleWeb;
+  /* 구글도 같다. 앱 안(WebView)에서는 구글이 OAuth 를 **막는다**(disallowed_useragent) —
+     팝업은 열리지만 「이 브라우저에서는 로그인할 수 없습니다」로 끝난다.
+     네이티브 플러그인을 붙이기 전까지 앱에서는 꺼 둔다. 웹에서는 팝업 흐름으로 된다. */
+  const googleUsable = on => platform() === 'web'
+    ? !!on.google
+    : !!(window.Capacitor?.Plugins?.SocialLogin && on.google);
 
   /* ── 화면 ── */
   function view(state, message) {
@@ -103,8 +116,8 @@ window.Auth = (() => {
       ${message ? `<p class="login-error">${message}</p>` : ''}`;
     return `
       <div class="login-methods">
-        <button class="login-method" data-login="google" ${on.google ? '' : 'disabled'}><svg class="brand-mark"><use href="#i-google"/></svg><b>Google 로 계속하기</b><small>${off('google') || '한 번이면 끝'}</small></button>
-        ${showApple() ? `<button class="login-method" data-login="apple" ${on.apple ? '' : 'disabled'}><svg class="brand-mark apple"><use href="#i-apple"/></svg><b>Apple 로 계속하기</b><small>${off('apple') || '이메일을 숨길 수 있습니다'}</small></button>` : ''}
+        <button class="login-method" data-login="google" ${googleUsable(on) ? '' : 'disabled'}><svg class="brand-mark"><use href="#i-google"/></svg><b>Google 로 계속하기</b><small>${googleUsable(on) ? '한 번이면 끝' : (on.offline ? '서버 없음' : platform() === 'web' ? '설정 필요' : '앱에서는 준비 중')}</small></button>
+        ${showApple() ? `<button class="login-method" data-login="apple" ${appleUsable(on) ? '' : 'disabled'}><svg class="brand-mark apple"><use href="#i-apple"/></svg><b>Apple 로 계속하기</b><small>${appleUsable(on) ? '이메일을 숨길 수 있습니다' : (on.offline ? '서버 없음' : '설정 필요')}</small></button>` : ''}
       </div>
       <form class="login-mail" id="login-mail-form">
         <input id="login-email" type="email" placeholder="메일 주소" autocomplete="email" required ${on.offline ? 'disabled' : ''}>
@@ -163,12 +176,32 @@ window.Auth = (() => {
     } catch (e) { open('start', e.message === 'cancelled' ? '' : '로그인하지 못했습니다 — ' + e.message); }
   }
   const script = src => new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.async = true; s.onload = ok; s.onerror = () => no(new Error('sdk-load-failed')); document.head.appendChild(s); });
-  async function googleToken() {
+  /* 구글 — **계정 고르는 창을 직접 띄운다.**
+     원래는 One Tap(google.accounts.id.prompt)이었는데, 브라우저에 구글 세션이 없으면 아무것도 안 뜨고
+     조용히 실패한다(FedCM 전환 뒤로는 「Provider's accounts list is empty」·NetworkError 로 끝난다).
+     로그인하려고 누른 사람에게 「아무 일도 안 일어남」은 최악이라 팝업 흐름으로 바꿨다(2026-10-15).
+     콘솔에 등록돼 있어야 하는 것 둘: 승인된 JavaScript 원본(이 사이트) · 승인된 리디렉션 URI(oauth.html). */
+  function googleToken() {
     if (!config.googleClientId) throw new Error('not-configured');
-    if (!window.google?.accounts?.id) await script('https://accounts.google.com/gsi/client');
+    const redirect = new URL('oauth.html', location.href).href;
+    const nonce = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    const url = 'https://accounts.google.com/o/oauth2/v2/auth'
+      + '?client_id=' + encodeURIComponent(config.googleClientId)
+      + '&redirect_uri=' + encodeURIComponent(redirect)
+      + '&response_type=id_token&scope=' + encodeURIComponent('openid email')
+      + '&nonce=' + nonce + '&state=' + nonce + '&prompt=select_account';
+    const win = window.open(url, 'pz-google', 'width=480,height=640,menubar=no,toolbar=no');
+    if (!win) throw new Error('popup-blocked');
     return new Promise((resolve, reject) => {
-      google.accounts.id.initialize({ client_id: config.googleClientId, callback: r => r.credential ? resolve(r.credential) : reject(new Error('cancelled')) });
-      google.accounts.id.prompt(n => { if (n.isNotDisplayed?.() || n.isSkippedMoment?.()) reject(new Error('cancelled')); });
+      const done = (fn, v) => { clearInterval(watch); window.removeEventListener('message', onMessage); fn(v); };
+      const onMessage = e => {
+        if (e.origin !== location.origin || e.data?.source !== 'patient-zero-oauth') return;
+        if (e.data.state !== nonce) return done(reject, new Error('state-mismatch'));
+        if (e.data.token) done(resolve, e.data.token); else done(reject, new Error(e.data.error || 'cancelled'));
+      };
+      window.addEventListener('message', onMessage);
+      // 사람이 창을 그냥 닫는 경우 — 영원히 기다리지 않는다
+      const watch = setInterval(() => { if (win.closed) done(reject, new Error('cancelled')); }, 500);
     });
   }
   async function appleToken() {

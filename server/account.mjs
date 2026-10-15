@@ -74,6 +74,9 @@ const body = req => new Promise(resolve => { let s = ''; req.on('data', c => { s
 const enabled = () => ({
   google: PROVIDERS.google.aud().length > 0,
   apple: PROVIDERS.apple.aud().length > 0,
+  // 웹에서 애플로 들어오려면 **Services ID** 가 있어야 한다. 번들 ID 만 있으면 네이티브 iOS 만 된다.
+  // 이걸 따로 알려 주지 않으면 화면이 「눌리는데 안 되는 단추」를 그린다(2026-10-15 에 그랬다).
+  appleWeb: !!process.env.APPLE_SERVICES_ID,
   mail: !!process.env.RESEND_API_KEY,
   googleClientId: process.env.GOOGLE_WEB_CLIENT_ID || '',
   appleClientId: process.env.APPLE_SERVICES_ID || '',

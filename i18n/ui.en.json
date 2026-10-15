@@ -742,5 +742,12 @@
  "받을 수 있는 보상과 진행 상황을 확인하세요.": "Check available rewards and progress.",
  "로그인하면 캐릭터·모집권·챕터 기록이 계정에 보관되고, 표시 이름과 대표 캐릭터가 유저 순위에 공개됩니다.": "When you log in, Characters, Recruitment Tickets, and Chapter records are saved to your Account, and your display name and Featured Character are shown in User Rankings.",
  "로그인하면 당신의 기록도 이 줄에 들어갑니다. 지금은 보기만 합니다 — 이 기기의 기록은 나가지 않습니다.": "When you log in, your records join this line too. For now, you only watch — this device's records do not leave.",
- "챕터와 상관없이 가장 높은 기록 하나로 줄을 세웁니다. 지금 줄에 선 건 이 기기의 기록뿐입니다 — 기록 서버에 닿지 못했습니다. 없는 상대를 지어내 채우지는 않습니다.": "The line is ranked by the single highest record, regardless of Chapter. Right now, only this device's records are in line — the record server could not be reached. We will not invent opponents that do not exist to fill it."
+ "챕터와 상관없이 가장 높은 기록 하나로 줄을 세웁니다. 지금 줄에 선 건 이 기기의 기록뿐입니다 — 기록 서버에 닿지 못했습니다. 없는 상대를 지어내 채우지는 않습니다.": "The line is ranked by the single highest record, regardless of Chapter. Right now, only this device's records are in line — the record server could not be reached. We will not invent opponents that do not exist to fill it.",
+ "사람과 닿으면 감염됩니다. 감염된 사람은 느릿느릿 걸으며 **옆 사람을 또 감염시킵니다** — 당신이 길을 열면 그들이 넓힙니다. 2.8초 안에 이어 감염하면 연쇄가 쌓이고, 3연쇄부터 체력이 2씩(제로는 4씩) 회복됩니다.": "Touch people to infect them. The infected shuffle along and **infect the next person** — you open the way, they spread it. Infect again within 2.8 sec. to build a chain; from 3 chains, recover 2 Stamina each time (Zero recovers 4).",
+ "대표 감염자입니다. 화면의 캐릭터를 누르면 말을 겁니다.": "This is the lead infected. Tap a character on screen to speak to them.",
+ "아이템 · 랭킹 · 이벤트 · 설정은 왼쪽에 있습니다.": "ITEMS · Rankings · Events · Settings are on the left.",
+ "지금 챕터입니다. 눌러서 다른 챕터를 고릅니다.": "This is the current Chapter. Tap to choose another Chapter.",
+ "모집권은 캐릭터 모집에만, 검체는 아이템 상점에서 씁니다.": "Recruitment Tickets are only for Character Recruitment; Specimens are used in the ITEMS Shop.",
+ "캐릭터 · 인벤토리 · 임무 · 교환소는 아래쪽입니다.": "Characters · Inventory · MISSIONS · Exchange are at the bottom.",
+ "준비됐으면 출격. 한 판은 90초입니다.": "Ready? Deploy. Each run lasts 90 sec."
 }

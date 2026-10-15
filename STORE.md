@@ -139,6 +139,58 @@ Apple 콘솔의 Identifiers 목록에서 세 앱이 나란히 보이고, 심사 
 
 ---
 
+## 3-2. 다시 굽는 법 — 안드로이드 · iOS
+
+웹(배포본)과 앱이 **같은 파일**을 쓴다. `tools/pack-mobile.mjs` 가 그 한 벌을 굽고,
+Capacitor 가 그걸 그대로 담는다. 그래서 굽는 단계를 빼먹으면 **옛 번들이 들어간 채로 빌드가 성공한다.**
+
+### 안드로이드 (윈도에서 됨)
+
+```bash
+cd mobile
+npm install                 # 처음 한 번
+npm run aab                 # 굽기 → cap sync android → bundleRelease 를 한 줄로
+#   → mobile/android/app/build/outputs/bundle/release/app-release.aab
+```
+
+내부 테스트용 APK 가 필요하면 `npm run apk`(디버그 서명).
+**`npx cap sync` 만 부르면 안 된다** — 그건 `webDir` 를 복사만 한다.
+
+버전을 올릴 때는 `mobile/android/app/build.gradle` 의 둘을 같이 고친다:
+`versionCode`(스토어가 보는 번호, 같은 번호는 두 번 못 올린다) · `versionName`(사람이 보는 이름).
+
+### iOS (맥에서만)
+
+```bash
+git clone https://github.com/sehyunVan/patient_zero.git
+cd patient_zero
+node tools/fetch-fonts.mjs            # 글꼴 832조각 — 저장소에 없다
+cd mobile && npm install
+npx cap add ios                       # 처음 한 번
+cd .. && node tools/ios-setup.mjs     # Info.plist (URL 스킴 · 이름 · 가로 고정 · 전체 화면)
+node tools/ios-icons.mjs              # 앱 아이콘 1024²(알파 없음) · 스플래시 2732²
+cd mobile && npm run pack && npx cap sync ios
+npx cap open ios                      # Xcode
+```
+
+Xcode 에서 **사람이 해야 하는 것 셋** (스크립트가 끝나면 다시 알려 준다):
+
+| 자리 | 할 일 |
+|---|---|
+| Signing & Capabilities | Team 선택 · Bundle ID `sarl.patientzero.app` |
+| ＋ Capability | **Sign in with Apple** — 없으면 iOS 애플 로그인이 아예 안 뜬다 |
+| Edit Scheme → Run → Options | StoreKit Configuration = **None** (안 그러면 결제가 가짜 거래가 된다) |
+
+그다음 `Product → Destination → Any iOS Device → Archive → Distribute App`.
+
+### 두 판 공통
+
+- 홈 화면 이름은 **PATIENT ZERO** 로 고정이다(스토어 등록 이름은 나라별로 따로 — §6 원고).
+- 번들에 박히는 서버 주소는 `tools/pack-mobile.mjs` 의 `--api`(기본값이 지금 서버다).
+- 굽고 나면 `pack-mobile` 이 스스로 점검한다 — CDN 글꼴 잔재 · 서버 주소 · 끊긴 경로.
+
+---
+
 ## 4. 사람이 해야 하는 것 — 내가 못 하는 자리
 
 순서는 SHIPPING.md §6 그대로다. **3번과 6번을 앞당기는 것**이 그 노트의 요점이다.

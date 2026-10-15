@@ -52,6 +52,16 @@ else {
   had.push('URL Types(넣음)');
 }
 
+/* ①-2 홈 화면 이름 — 어느 나라에서든 PATIENT ZERO.
+   (스토어 등록 이름은 나라별로 따로다 — 한국 스토어는 「최초 감염자」. STORE.md §6) */
+const NAME = 'PATIENT ZERO';
+for (const key of ['CFBundleDisplayName', 'CFBundleName']) {
+  const re = new RegExp('<key>' + key + '</key>\\s*\\n\\s*<string>[^<]*</string>');
+  if (re.test(plist)) plist = plist.replace(re, `<key>${key}</key>\n	<string>${NAME}</string>`);
+  else plist = plist.replace(/\n<\/dict>\n<\/plist>/, `\n	<key>${key}</key>\n	<string>${NAME}</string>\n</dict>\n</plist>`);
+  had.push(key);
+}
+
 /* ② 가로 전용 — 아이폰·아이패드 둘 다 */
 const landscape = `	<array>
 		<string>UIInterfaceOrientationLandscapeLeft</string>

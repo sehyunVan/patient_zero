@@ -116,6 +116,8 @@
       cleared && next && unlocked ? `CHAPTER ${next.n} 로 ↗` : '다시 도전하기 ↗',
       `작전 보상 · 검체 +${earned.cash}${earned.tickets ? ` · 첫 통과 모집권 +${earned.tickets}` : ''} / 로비에서 챕터를 고를 수 있습니다.`);
     if (unlocked && next) { config.selected = next.n; config.save(); }
+    // 첫 전투가 끝나면 결과를 잠깐 보여 주고 **로비로 데려가 한 바퀴 돌린다** — 거기서 처음 보는 화면이라.
+    if (window.Tour?.armed?.()) setTimeout(() => { if (mode === "over") { enterLobby(); Tour.start(); } }, 2200);
     beep(cleared ? 520 : 65, .4, cleared ? 'triangle' : 'sawtooth');
   }
   // 가장 가까운 바깥 테두리 쪽 — 감염된 사람은 이쪽으로 비틀대며 걸어 나간다.
@@ -126,8 +128,8 @@
   function infect(index, chained = false) {
     const h = humans[index]; score++;
     if (!chained) { combo++; comboTime = 2.8; if (combo >= 3) player.hp = Math.min(100, player.hp + player.character.heal); }
-    // 감염자는 더는 남을 감염시키지 않는다. 자기 옷을 입은 채 변해서 맵 밖으로 걸어 나가는, 내가 한 일의 흔적이다.
-    infected.push({ x: h.x, y: h.y, variant: h.variant, life: 26, angle: h.angle, exit: exitAngle(h), wobble: 0, speed: rand(42, 66), warmup: .7 });
+    // 감염자는 자기 옷을 입은 채 변해서 느릿느릿 걷는다 — 닿은 사람을 또 감염시킨다(연쇄는 콤보에 안 센다).
+    infected.push({ x: h.x, y: h.y, variant: h.variant, life: 26, angle: h.angle, exit: exitAngle(h), wobble: 0, speed: rand(26, 38), warmup: .7, r: 10 });
     if (infected.length > 55) infected.shift();
     burst(h.x, h.y, '#ff344d'); rings.push({ x: h.x, y: h.y, r: 5, life: .28, color: '#ff4058' });
     floats.push({ x: h.x, y: h.y - 18, life: .9, text: chained ? '+1' : combo >= 2 ? `${combo} CHAIN` : '+1' }); humans.splice(index, 1);
@@ -217,15 +219,30 @@
     for(const mine of mines) { mine.life-=dt; if(humans.some(h=>h.fade>=1&&distance(h,mine)<65)) { for(let i=humans.length-1;i>=0;i--) if(humans[i].fade>=1&&distance(humans[i],mine)<120) infect(i,true); rings.push({x:mine.x,y:mine.y,r:0,life:.55,color:"#ff485b"});mine.life=0;} } mines=mines.filter(m=>m.life>0);
     for (const p of particles) { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; }
     particles = particles.filter(p => p.life > 0);
-    // 감염자는 전염원이 아니다 — 비틀대며 가장 가까운 테두리로 걸어 나가고, 나가면 사라진다.
-    for (const z of infected) {
+    /* 감염자도 퍼뜨린다(2026-10-15). 느릿느릿 — 사람보다 느려서 **쫓지 못하고 가로막는다.**
+       그래서 역할이 갈린다: 빠른 건 당신 하나, 감염자는 인파 속에 박혀 길을 좁히는 쪽이다.
+       수명(life)과 55명 상한은 그대로 둔다. 둘 다 없애면 한 판이 끝까지 자동으로 굴러간다. */
+    const SPREAD_SEE = 190, SPREAD_TOUCH = 24;
+    for (let zi = 0, zn = infected.length; zi < zn; zi++) {
+      const z = infected[zi];
       z.life -= dt; z.warmup -= dt;
       if (z.warmup > 0) continue;
-      z.wobble -= dt;
-      if (z.wobble <= 0) { z.wobble = rand(.5, 1.5); z.angle = z.exit + rand(-.8, .8); }
+      // 가장 가까운 사람을 본다 — 보이면 그쪽으로, 안 보이면 하던 대로 비틀댄다
+      let prey = -1, best = SPREAD_SEE;
+      for (let i = 0; i < humans.length; i++) {
+        const d = distance(humans[i], z);
+        if (d < best) { best = d; prey = i; }
+      }
+      if (prey >= 0) z.angle = Math.atan2(humans[prey].y - z.y, humans[prey].x - z.x);
+      else {
+        z.wobble -= dt;
+        if (z.wobble <= 0) { z.wobble = rand(.5, 1.5); z.angle = z.exit + rand(-.8, .8); }
+      }
       moveActor(z, z.x + Math.cos(z.angle) * z.speed * dt, z.y + Math.sin(z.angle) * z.speed * dt);
+      if (prey >= 0 && best < SPREAD_TOUCH && humans[prey].fade >= 1) infect(prey, true);
       if (z.x < -45 || z.x > W + 45 || z.y < -45 || z.y > H + 45) z.life = 0;
     }
+    while (infected.length > 55) infected.shift();
     infected = infected.filter(z => z.life > 0);
     for (const r of rings) { r.life -= dt; r.r += 560 * dt; } rings = rings.filter(r => r.life > 0);
     for (const f of floats) { f.life -= dt; f.y -= 27 * dt; } floats = floats.filter(f => f.life > 0);
@@ -267,7 +284,7 @@
   function firstRun() {
     const automated = navigator.webdriver && !window.FORCE_INTRO;   // 테스트는 로비부터 본다
     if (!window.Intro || Intro.seen() || automated) return enterLobby();
-    Intro.play(() => { config.selected = 1; config.save(); showBest(); start(); Intro.tutorial(); });
+    Intro.play(() => { config.selected = 1; config.save(); showBest(); start(); Intro.tutorial(); window.Tour?.arm?.(); });
   }
   function enterLobby() {window.Intro?.stop();Progression.sync();setMode('lobby'); keys.clear();stick.x=stick.y=0;$('overlay').classList.add('hidden');buildTactical();showBest();const ch=config.chapter(),st=config.stars(ch,best()),goals=config.starGoals(ch);const goal=goals[Math.min(2,st)];$('hub-goal').textContent=goal;$('hub-progress').style.width=Math.min(100,best()/goal*100)+'%';$('hub-play').focus();}
 
@@ -523,10 +540,11 @@
     const panels = {
       items: ['생존 가이드', guideScreen()],
       record: ['랭킹', recordHero() + `<div id="record-detail">${Ranking.panel()}</div>`],
-      help: ['도시를 감염시키는 방법', guide('crown', `챕터 · ${ROUND}초 한 판`, '한 판은 ' + ROUND + '초로 고정입니다. 제한 시간 안에 챕터의 통과선을 넘기면 통과하고 다음 챕터가 열립니다. 통과한 뒤 남은 시간은 전부 기록 경신에 쓰세요 — 뒤 챕터일수록 백신은 거세지지만 인파가 더 몰려 기록은 더 크게 나옵니다.') + guide('run', '왼쪽 스틱 · 이동', '왼쪽 아래 스틱을 끌어 움직이고, 오른쪽 아래 버튼으로 대시·방어막·충격파를 씁니다. 키보드는 WASD / 방향키로도 됩니다.') + guide('skull', '접촉 감염 · 연쇄', '사람과 닿으면 감염됩니다. 감염된 사람은 더 퍼뜨리지 않고 비틀대며 도시 밖으로 걸어 나갑니다 — 퍼뜨리는 건 오직 당신입니다. 2.8초 안에 이어 감염하면 연쇄가 쌓이고, 3연쇄부터 체력이 2씩(제로는 4씩) 회복됩니다.') + guide('target', '백신 사격을 피하세요', '푸른 조준선은 발사 방향을 예고합니다. 백신에 맞으면 체력이 20, 애쉬는 15 감소합니다. 판이 진행될수록 사격이 거세집니다.') + guide('help', '일시정지 · 가로 화면', '오른쪽 위 Ⅱ 버튼, 키보드는 ESC / P. 폰을 세로로 돌리거나 다른 창으로 이동하면 자동으로 멈춥니다.')]
+      help: ['도시를 감염시키는 방법', guide('crown', `챕터 · ${ROUND}초 한 판`, '한 판은 ' + ROUND + '초로 고정입니다. 제한 시간 안에 챕터의 통과선을 넘기면 통과하고 다음 챕터가 열립니다. 통과한 뒤 남은 시간은 전부 기록 경신에 쓰세요 — 뒤 챕터일수록 백신은 거세지지만 인파가 더 몰려 기록은 더 크게 나옵니다.') + guide('run', '왼쪽 스틱 · 이동', '왼쪽 아래 스틱을 끌어 움직이고, 오른쪽 아래 버튼으로 대시·방어막·충격파를 씁니다. 키보드는 WASD / 방향키로도 됩니다.') + guide('skull', '접촉 감염 · 연쇄', '사람과 닿으면 감염됩니다. 감염된 사람은 느릿느릿 걸으며 **옆 사람을 또 감염시킵니다** — 당신이 길을 열면 그들이 넓힙니다. 2.8초 안에 이어 감염하면 연쇄가 쌓이고, 3연쇄부터 체력이 2씩(제로는 4씩) 회복됩니다.') + guide('target', '백신 사격을 피하세요', '푸른 조준선은 발사 방향을 예고합니다. 백신에 맞으면 체력이 20, 애쉬는 15 감소합니다. 판이 진행될수록 사격이 거세집니다.') + guide('help', '일시정지 · 가로 화면', '오른쪽 위 Ⅱ 버튼, 키보드는 ESC / P. 폰을 세로로 돌리거나 다른 창으로 이동하면 자동으로 멈춥니다.')]
     };
-    $('dialog-eyebrow').textContent = { items: 'SURVIVAL GUIDE', record: 'INFECTION RECORD', help: 'HOW TO PLAY' }[panel] || 'SURVIVAL GUIDE';
-    $('dialog-title').textContent = panels[panel][0]; $('dialog-content').innerHTML = panels[panel][1]; dialog.showModal();
+    const eyebrow = $('dialog-eyebrow'), titleEl = $('dialog-title');
+    if (eyebrow) eyebrow.textContent = { items: 'SURVIVAL GUIDE', record: 'INFECTION RECORD', help: 'HOW TO PLAY' }[panel] || 'SURVIVAL GUIDE';
+    if (titleEl) titleEl.textContent = panels[panel][0]; $('dialog-content').innerHTML = panels[panel][1]; dialog.showModal();
     if (panel === 'items') wireGuide();
     if (panel === 'record') {
       // 자세한 기록은 접어 둔다 — 시안의 「기록 확인」이 그걸 연다

@@ -13,7 +13,7 @@ window.Panels=(()=>{
    else document.querySelector('[data-panel="'+target+'"]')?.click();
   } finally { setTimeout(()=>{ d.showModal=original; },0); }
  }
- function reset(){const d=document.getElementById('info-dialog');d.classList.remove('utility-panel');delete d.dataset.utility;}
+ function reset(){const d=document.getElementById('info-dialog');d.classList.remove('utility-panel','no-rail');delete d.dataset.utility;const host=document.getElementById('dialog-content');if(host)host.style.gridTemplateColumns='';}
  function apply(kind){if(!meta[kind])return;const d=document.getElementById('info-dialog'),host=document.getElementById('dialog-content'),m=meta[kind],state=Progression.snapshot();d.classList.add('utility-panel');d.dataset.utility=kind;const body=document.createElement('section');body.className='utility-body';while(host.firstChild)body.appendChild(host.firstChild);host.appendChild(body);
  const head=document.createElement('header');head.className='utility-header';head.innerHTML='<div class="utility-symbol">'+icon(m[3])+'</div><div><small>'+m[0]+'</small><h2>'+m[1]+'</h2><p>'+m[2]+'</p></div><div class="utility-wallet"><span><img src="assets/icons/ticket.webp" alt="모집권">'+state.tickets.toLocaleString()+'</span><span><img src="assets/icons/sample.webp" alt="검체">'+(state.cash||0).toLocaleString()+'</span><span><img src="assets/icons/fragment.webp" alt="조각">'+state.fragments.toLocaleString()+'</span></div>';host.prepend(head);
  if(kind==='loadout'){
@@ -24,6 +24,7 @@ window.Panels=(()=>{
  const filter=()=>{filters.querySelectorAll('button').forEach(b=>{b.classList.toggle('on',b.dataset.equipmentFilter===equipmentFilter);b.setAttribute('aria-pressed',String(b.dataset.equipmentFilter===equipmentFilter));});body.querySelectorAll('.skill-card').forEach(c=>c.hidden=equipmentFilter!=='all'&&c.dataset.category!==equipmentFilter);};filters.querySelectorAll('button').forEach(b=>b.onclick=()=>{equipmentFilter=b.dataset.equipmentFilter;filter();});filter();
  }
 
+ if(kind==='inbox'||kind==='notifications'){d.classList.add('no-rail');host.style.gridTemplateColumns='minmax(0,1fr)';return;}
  const nav=document.createElement('nav');nav.className='utility-nav';nav.setAttribute('aria-label','게임 메뉴');nav.innerHTML=Object.entries(meta).filter(([key])=>!['shop','inbox','notifications'].includes(key)).map(([key,v],i)=>'<button data-utility-go="'+key+'" class="'+(key===kind?'on':'')+'" aria-current="'+(key===kind?'page':'false')+'"><small>0'+(i+1)+'</small>'+icon(v[3])+'<span>'+(key==='events'?'이벤트':v[1])+'</span><b>›</b></button>').join('')+'<div class="utility-signature">INFECTION<span>TAKE OVER THE WORLD</span></div>';host.appendChild(nav);
  nav.querySelectorAll('button').forEach(b=>b.onclick=()=>{const target=b.dataset.utilityGo;if(target===kind)return;goTo(target);});
  }

@@ -35,7 +35,7 @@ say(){ printf '\033[36m▸\033[0m %s\n' "$*"; }
 
 say "쌓는다: $STAGE"
 mkdir -p "$STAGE/assets" "$STAGE/js" "$STAGE/icons" "$STAGE/i18n"
-for f in index.html phone.html manifest.webmanifest; do cp "$ROOT/$f" "$STAGE/$f"; done
+for f in index.html phone.html oauth.html manifest.webmanifest; do cp "$ROOT/$f" "$STAGE/$f"; done
 # css 는 이름을 적지 않고 전부 가져온다 — 한 장이 늘 때마다 여기를 고치는 걸 잊으면
 # 그 화면만 옷을 안 입은 채로 올라간다(2026-10-15 에 interaction/touch-feedback 두 장이 그랬다)
 cp "$ROOT"/*.css "$STAGE/"

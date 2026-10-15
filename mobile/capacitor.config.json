@@ -1,6 +1,6 @@
 {
   "appId": "sarl.patientzero.app",
-  "appName": "최초 감염자",
+  "appName": "PATIENT ZERO",
   "webDir": "../dist/mobile",
   "android": {
     "allowMixedContent": false,

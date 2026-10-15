@@ -4,6 +4,7 @@
      node promo/reel/render.js --preview 0,2.6,6.2,9.4,13,18.2   # 몇 장만 → out/preview/
      node promo/reel/render.js --frames [--workers 4]            # 1200장  → out/frames/
      node promo/reel/render.js --encode                          # frames + music.wav → promo/showreel.mp4
+     node promo/reel/render.js --vertical                        # 가로판 → 1080×1920 세로판 (쇼츠·릴스)
 
    REEL.seek(t) 가 매번 처음부터 그리므로 크롬 네 대가 나눠 찍어도 같은 그림이 나온다.
    프레임은 저장소 밖(스크래치)에 쌓는다 — 1200장 PNG 를 저장소에 남기지 않는다.
@@ -84,17 +85,53 @@ async function openPage(base, cdpPort, height) {
   return { shot, close, errs, ev };
 }
 
+/* ffmpeg 는 저장소에 두지 않는다 — FFMPEG= 로 넘기거나 스크래치의 ffmpeg-static 을 쓴다 */
+function findFF() {
+  const ff = process.env.FFMPEG || [
+    path.join(OUT, '..', 'node_modules', 'ffmpeg-static', 'ffmpeg.exe'),
+    path.join(__dirname, 'node_modules', 'ffmpeg-static', 'ffmpeg.exe'),
+  ].find(p => fs.existsSync(p));
+  if (!ff) throw new Error('ffmpeg 를 못 찾았다 — FFMPEG=경로 로 알려 달라');
+  return ff;
+}
+
 (async () => {
   const PORT = 9761, base = `http://localhost:${PORT}`;
   const HEIGHT = +argOf('--height', 1080) | 0;
   const HSUF = HEIGHT === 1080 ? '' : '-h' + HEIGHT;
 
+  /* ---- 세로판 (1080×1920) ----
+     쇼츠·릴스용. 가로판을 폭에 맞춰 가운데 놓고, 위아래 빈 곳은 같은 화면을 크게 키워
+     흐리게 깐다. 새로 찍지 않고 다 구운 영상에서 만들므로 몇 초면 끝난다. */
+  if (has('--vertical')) {
+    const ff = findFF();
+    const src = path.join(ROOT, 'promo', `patient-zero-showreel${SUF}.mp4`);
+    if (!fs.existsSync(src)) throw new Error('가로판이 없다 — 먼저 --encode: ' + src);
+    /* 가운데 그림은 1080×608. 위아래로 656px 씩 남고, 그 자리는 흐린 같은 그림이 채운다.
+       폰에서 글자가 읽혀야 하니 바탕은 어둡게 눌러 둔다. */
+    const fc = [
+      '[0:v]split=2[bg][fg]',
+      '[bg]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,' +
+        'gblur=sigma=42,eq=brightness=-0.16:saturation=0.65[bgb]',
+      '[fg]scale=1080:-2[fgs]',
+      '[bgb][fgs]overlay=(W-w)/2:(H-h)/2,format=yuv420p[v]',
+    ].join(';');
+    for (const [file, crf, extra] of [
+      [`patient-zero-showreel${SUF}-vertical.mp4`, '19', []],
+      [`patient-zero-showreel${SUF}-vertical-web.mp4`, '23', ['-maxrate','10M','-bufsize','20M']],
+    ]) {
+      const dst = path.join(ROOT, 'promo', file);
+      execFileSync(ff, ['-y', '-i', src, '-filter_complex', fc, '-map', '[v]', '-map', '0:a?',
+        '-c:v','libx264','-preset','slow','-crf',crf, ...extra, '-pix_fmt','yuv420p','-profile:v','high','-level','4.2',
+        '-color_primaries','bt709','-color_trc','bt709','-colorspace','bt709','-movflags','+faststart',
+        '-c:a','aac','-b:a','256k', dst], { stdio: ['ignore','ignore','inherit'] });
+      console.log('→ ' + path.relative(process.cwd(), dst), (fs.statSync(dst).size / 1048576).toFixed(1) + 'MB');
+    }
+    return;
+  }
+
   if (has('--encode')) {
-    const ff = process.env.FFMPEG || [
-      path.join(OUT, '..', 'node_modules', 'ffmpeg-static', 'ffmpeg.exe'),
-      path.join(__dirname, 'node_modules', 'ffmpeg-static', 'ffmpeg.exe'),
-    ].find(p => fs.existsSync(p));
-    if (!ff) throw new Error('ffmpeg 를 못 찾았다 — FFMPEG=경로 로 알려 달라');
+    const ff = findFF();
     const music = path.join(OUT, 'music.wav');
     const dstDir = path.join(ROOT, 'promo'); fs.mkdirSync(dstDir, { recursive: true });
     /* 둘을 굽는다 — 마스터(crf 17)와 보내기용(crf 23, 12Mbps 상한) */
