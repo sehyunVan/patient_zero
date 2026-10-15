@@ -85,7 +85,7 @@ Apple 콘솔의 Identifiers 목록에서 세 앱이 나란히 보이고, 심사 
 | Google (웹 · 안드로이드) | `GOOGLE_WEB_CLIENT_ID` | OAuth **웹** 클라이언트 ID 하나. 안드로이드는 이 값을 `serverClientId` 로 넘겨야 ID 토큰이 난다 — 안드로이드 클라이언트 ID 로는 안 난다 |
 | Google (iOS) | `GOOGLE_IOS_CLIENT_ID` | iOS 클라이언트 ID. **iOS 판에서 구글 단추를 숨기면 안 만들어도 된다** |
 | Apple (iOS 네이티브) | `APPLE_BUNDLE_ID` = `sarl.patientzero.app` | App ID 에 Sign in with Apple 체크. **aud 로 번들 ID 가 온다** |
-| Apple (웹) | `APPLE_SERVICES_ID` · `APPLE_REDIRECT` | Services ID 와 Return URL. **1차에는 만들지 않는다** |
+| Apple (웹) | `APPLE_SERVICES_ID` = `sarl.patientzero.signin` · `APPLE_REDIRECT` | Services ID 와 Return URL (2026-10-15 발급·연결 완료). Team `FN9DUHVG65` |
 | 메일 코드 | `RESEND_API_KEY` · `MAIL_FROM` | Resend 의 **HTTP API**(SMTP 아님) |
 | 심사용 데모 | `DEMO_EMAIL=review@copycat.sarl` · `DEMO_CODE=503118` | 고정 코드 한 쌍. 메일이 실제로 가지 않는다 |
 
@@ -126,7 +126,15 @@ Apple 콘솔의 Identifiers 목록에서 세 앱이 나란히 보이고, 심사 
 > 앱 안에서 **구글 로그인은 아직 못 연다** — 구글이 WebView 의 OAuth 를 막는다(`disallowed_useragent`).
 > 네이티브 플러그인(`@capgo/capacitor-social-login`)으로 바꿔야 열린다. 그때까지 앱의 실질 수단은 **메일 코드**다.
 
-**1차에 Services ID 를 만들지 않는 이유.** SHIPPING.md §3 의 「콘솔에서 틀린 값 넷」은 전부 **웹 흐름**의
+**애플 콘솔에서 걸린 자리.** Domains 칸은 **도메인만** 받는다 — `https://` 나 경로를 넣으면
+「One or more domains are invalid」로 막힌다. 도메인은 `home.165-227-196-68.sslip.io`,
+Return URL 은 `https://home.165-227-196-68.sslip.io/patient-zero/api/auth/apple` 전체 주소다.
+
+**웹 흐름을 열면서 배운 것.** 애플은 토큰을 주소 뒤가 아니라 **POST 본문(form_post)** 으로 돌려준다 —
+정적 파일로는 못 받아서 서버가 `POST /api/auth/apple` 로 직접 받는다. 구글은 fragment 라 `oauth.html` 이 받는다.
+둘의 모양이 다른 게 맞다.
+
+**(옛 기록) 1차에 Services ID 를 만들지 않는 이유.** SHIPPING.md §3 의 「콘솔에서 틀린 값 넷」은 전부 **웹 흐름**의
 함정이다(Client IDs 순서 · `sub` · `.p8` 로 서명한 JWT · Return URL). 네이티브 iOS 로그인은 그 넷을 하나도
 밟지 않고, `aud` 가 번들 ID 로 오는 것만 맞으면 된다. **6개월마다 비밀을 갈아 끼우는 일도 없다.**
 웹판(home 사이트)에서 애플 로그인을 열고 싶어지면 그때 Services ID 를 만들고 `APPLE_AUD` 에 쉼표로 더한다.
@@ -153,8 +161,9 @@ npm run aab                 # 굽기 → cap sync android → bundleRelease 를 
 #   → mobile/android/app/build/outputs/bundle/release/app-release.aab
 ```
 
-내부 테스트용 APK 가 필요하면 `npm run apk`(디버그 서명).
 **`npx cap sync` 만 부르면 안 된다** — 그건 `webDir` 를 복사만 한다.
+`npm run aab` 은 `tools/build-aab.mjs` 를 부른다 — 굽기·동기화·gradle 을 **순서대로, 실패하면 거기서 멈춘다.**
+gradle 래퍼 이름이 판마다 달라서(`gradlew.bat` / `gradlew`) 그 선택도 여기서 한다.
 
 버전을 올릴 때는 `mobile/android/app/build.gradle` 의 둘을 같이 고친다:
 `versionCode`(스토어가 보는 번호, 같은 번호는 두 번 못 올린다) · `versionName`(사람이 보는 이름).
@@ -169,6 +178,7 @@ cd mobile && npm install
 npx cap add ios                       # 처음 한 번
 cd .. && node tools/ios-setup.mjs     # Info.plist (URL 스킴 · 이름 · 가로 고정 · 전체 화면)
 node tools/ios-icons.mjs              # 앱 아이콘 1024²(알파 없음) · 스플래시 2732²
+                                      #   원화: icons/store/app-icon-1024.png (저장소에 있다)
 cd mobile && npm run pack && npx cap sync ios
 npx cap open ios                      # Xcode
 ```

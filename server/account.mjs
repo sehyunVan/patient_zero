@@ -71,6 +71,27 @@ const json = (res, code, body) => { res.writeHead(code, { 'Content-Type': 'appli
 const bad = (res, message, code = 400) => json(res, code, { error: message });
 const body = req => new Promise(resolve => { let s = ''; req.on('data', c => { s += c; if (s.length > 2e6) req.destroy(); }); req.on('end', () => { try { resolve(JSON.parse(s || '{}')); } catch { resolve({}); } }); });
 
+/* 애플은 form_post 로 돌려준다 — JSON 이 아니라 application/x-www-form-urlencoded 다 */
+const formBody = req => new Promise(resolve => {
+  let s = '';
+  req.on('data', c => { s += c; if (s.length > 2e6) req.destroy(); });
+  req.on('end', () => { const out = {}; for (const [k, v] of new URLSearchParams(s)) out[k] = v; resolve(out); });
+});
+/* 팝업이 제 할 일을 마치고 원래 창에 결과를 넘긴 뒤 스스로 닫는 한 장.
+   토큰이 아니라 **세션**을 넘긴다 — 애플 토큰은 이 서버가 이미 검증했으니 다시 보낼 이유가 없다. */
+const popupHtml = payload => `<!DOCTYPE html><html lang="ko"><meta charset="utf-8">
+<title>로그인 처리 중…</title>
+<body style="margin:0;background:#060a10;color:#8aa2b4;font:13px -apple-system,sans-serif;display:grid;place-items:center;height:100vh">
+<p>로그인 확인 중…</p>
+<script>
+(function(){
+  var data = ${JSON.stringify({ source: 'patient-zero-oauth', ...payload })};
+  try { if (window.opener) { window.opener.postMessage(data, '*'); window.close(); return; } } catch (e) {}
+  try { sessionStorage.setItem('patient-zero-oauth', JSON.stringify(data)); } catch (e) {}
+  location.replace('../../');
+})();
+</script></body></html>`;
+
 const enabled = () => ({
   google: PROVIDERS.google.aud().length > 0,
   apple: PROVIDERS.apple.aud().length > 0,
@@ -87,6 +108,27 @@ export const handlers = {
   'GET /api/config': async (req, res) => json(res, 200, enabled()),
 
   // 구글·애플: 클라이언트가 받아 온 ID 토큰을 검증만 한다
+  /* 애플 웹 로그인이 **돌아오는 자리**. 애플 콘솔의 Return URL 에 이 주소를 적는다.
+     애플은 토큰을 주소 뒤가 아니라 **POST 본문(form_post)** 으로 보낸다 — 정적 파일로는 못 받는다.
+     그래서 여기서 받아 검증하고, 세션을 만들어 **팝업을 연 창으로 넘긴 뒤 창을 닫는다.**
+     (구글은 fragment 로 주므로 정적 oauth.html 이 받는다 — 둘의 모양이 다른 게 맞다.) */
+  'POST /api/auth/apple': async (req, res) => {
+    const form = await formBody(req);
+    const token = form.id_token;
+    const fail = why => {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(popupHtml({ error: why }));
+    };
+    if (!token) return fail(form.error || 'no-token');
+    let claims;
+    try { claims = await verifyIdToken('apple', token); }
+    catch (e) { return fail(String(e.message || 'bad-token')); }
+    if (!claims.email) return fail('no-email');
+    const account = accountFor(claims.email, 'apple');
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(popupHtml({ session: { token: newSession(account.id), me: profile(account) }, state: form.state || '' }));
+  },
+
   'POST /api/auth/token': async (req, res) => {
     const { provider, token } = await body(req);
     if (!PROVIDERS[provider]) return bad(res, 'unknown-provider');

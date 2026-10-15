@@ -162,15 +162,15 @@ window.Auth = (() => {
     if ($('login-pull')) $('login-pull').onclick = async () => { try { if (await pull()) location.reload(); } catch (e) { open('signed', e.message); } };
   }
 
-  // 구글·애플 버튼 — 각 SDK 가 ID 토큰을 주면 서버로 넘긴다
+  /* 구글·애플 — 둘 다 **팝업**으로 연다. 돌아오는 모양만 다르다:
+       구글은 주소 뒤(fragment)에 id_token 을 주므로 oauth.html 이 받아 넘기고, 여기서 서버에 검증을 맡긴다.
+       애플은 **POST(form_post)** 로 주므로 서버가 직접 받아 검증하고 **세션**을 돌려준다. */
   async function start(provider) {
     try {
       if (provider === 'google') {
-        const idToken = await googleToken();
-        await signInWithToken('google', idToken);
+        await signInWithToken('google', await googleToken());
       } else {
-        const idToken = await appleToken();
-        await signInWithToken('apple', idToken);
+        remember(await appleSession());
       }
       open('signed');
     } catch (e) { open('start', e.message === 'cancelled' ? '' : '로그인하지 못했습니다 — ' + e.message); }
@@ -190,28 +190,39 @@ window.Auth = (() => {
       + '&redirect_uri=' + encodeURIComponent(redirect)
       + '&response_type=id_token&scope=' + encodeURIComponent('openid email')
       + '&nonce=' + nonce + '&state=' + nonce + '&prompt=select_account';
-    const win = window.open(url, 'pz-google', 'width=480,height=640,menubar=no,toolbar=no');
+    return popupFlow(url, 'pz-google', data => data.token || null, nonce);
+  }
+
+  /* 팝업 하나를 열고 **결과 한 번**을 기다린다 — 구글과 애플이 같이 쓴다.
+     셋 중 하나로 끝난다: 결과가 왔다 · 오류가 왔다 · 사람이 창을 닫았다.
+     마지막 경우를 안 보면 영영 기다리는 단추가 된다(실제로 그랬다). */
+  function popupFlow(url, name, pick, state) {
+    const win = window.open(url, name, 'width=480,height=640,menubar=no,toolbar=no');
     if (!win) throw new Error('popup-blocked');
     return new Promise((resolve, reject) => {
       const done = (fn, v) => { clearInterval(watch); window.removeEventListener('message', onMessage); fn(v); };
       const onMessage = e => {
-        if (e.origin !== location.origin || e.data?.source !== 'patient-zero-oauth') return;
-        if (e.data.state !== nonce) return done(reject, new Error('state-mismatch'));
-        if (e.data.token) done(resolve, e.data.token); else done(reject, new Error(e.data.error || 'cancelled'));
+        if (e.data?.source !== 'patient-zero-oauth') return;
+        if (state && e.data.state && e.data.state !== state) return done(reject, new Error('state-mismatch'));
+        const value = pick(e.data);
+        if (value) done(resolve, value); else done(reject, new Error(e.data.error || 'cancelled'));
       };
       window.addEventListener('message', onMessage);
-      // 사람이 창을 그냥 닫는 경우 — 영원히 기다리지 않는다
       const watch = setInterval(() => { if (win.closed) done(reject, new Error('cancelled')); }, 500);
     });
   }
-  async function appleToken() {
+  /* 애플 — 애플의 JS SDK 를 쓰지 않는다. 그 SDK 는 팝업/리디렉트 처리를 제 방식대로 하는데,
+     우리는 **서버가 Return URL 을 받는** 모양이라 둘이 맞지 않는다. 주소를 직접 열고 서버를 기다린다.
+     응답은 id_token 이 아니라 **세션**이다(서버가 이미 검증했다). */
+  function appleSession() {
     if (!config.appleClientId) throw new Error('not-configured');
-    if (!window.AppleID) await script('https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js');
-    AppleID.auth.init({ clientId: config.appleClientId, scope: 'email', redirectURI: config.appleRedirect, usePopup: true });
-    const r = await AppleID.auth.signIn();
-    const idToken = r?.authorization?.id_token;
-    if (!idToken) throw new Error('cancelled');
-    return idToken;
+    const nonce = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    const url = 'https://appleid.apple.com/auth/authorize'
+      + '?client_id=' + encodeURIComponent(config.appleClientId)
+      + '&redirect_uri=' + encodeURIComponent(config.appleRedirect)
+      + '&response_type=code%20id_token&response_mode=form_post&scope=email'
+      + '&state=' + nonce + '&nonce=' + nonce;
+    return popupFlow(url, 'pz-apple', data => data.session || null);
   }
 
   document.addEventListener('DOMContentLoaded', () => {

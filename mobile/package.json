@@ -6,8 +6,7 @@
   "scripts": {
     "pack": "node ../tools/pack-mobile.mjs",
     "sync": "node ../tools/pack-mobile.mjs && cap sync android",
-    "apk": "cd android && gradlew.bat assembleDebug",
-    "aab": "node ../tools/pack-mobile.mjs && cap sync android && cd android && gradlew.bat bundleRelease"
+    "aab": "node ../tools/build-aab.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",

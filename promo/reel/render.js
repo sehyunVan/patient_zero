@@ -109,12 +109,18 @@ function findFF() {
     if (!fs.existsSync(src)) throw new Error('가로판이 없다 — 먼저 --encode: ' + src);
     /* 가운데 그림은 1080×608. 위아래로 656px 씩 남고, 그 자리는 흐린 같은 그림이 채운다.
        폰에서 글자가 읽혀야 하니 바탕은 어둡게 눌러 둔다. */
+    /* 바탕은 잘라내지 말고 **늘여서** 흐린다 — 가운데만 잘라 키우면 한쪽에만 밝은 덩어리가 생겨
+       화면이 한쪽으로 기운다. 늘인 판은 위아래가 가운데 그림과 이어져 이음매가 안 보인다.
+       비네트로 네 귀퉁이를 눌러 눈이 가운데로 가게 하고, 가는 선 두 줄로 가운데 판을 세운다. */
+    const Y0 = Math.round((1920 - Math.round(1080 * 1080 / 1920 / 2) * 2) / 2);   /* = 656 */
+    const Y1 = 1920 - Y0;
     const fc = [
       '[0:v]split=2[bg][fg]',
-      '[bg]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,' +
-        'gblur=sigma=42,eq=brightness=-0.16:saturation=0.65[bgb]',
+      '[bg]scale=1080:1920,gblur=sigma=54,eq=brightness=-0.22:saturation=0.55,vignette=PI/3[bgb]',
       '[fg]scale=1080:-2[fgs]',
-      '[bgb][fgs]overlay=(W-w)/2:(H-h)/2,format=yuv420p[v]',
+      `[bgb][fgs]overlay=(W-w)/2:(H-h)/2,` +
+        `drawbox=x=0:y=${Y0 - 1}:w=1080:h=1:color=white@0.18:t=fill,` +
+        `drawbox=x=0:y=${Y1}:w=1080:h=1:color=white@0.18:t=fill,format=yuv420p[v]`,
     ].join(';');
     for (const [file, crf, extra] of [
       [`patient-zero-showreel${SUF}-vertical.mp4`, '19', []],

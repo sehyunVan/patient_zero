@@ -19,7 +19,16 @@ node promo/reel/render.js --frames --workers 4
 FFMPEG=<ffmpeg 경로> node promo/reel/render.js --encode
 #  → promo/patient-zero-showreel.mp4        (crf 17, 마스터)
 #  → promo/patient-zero-showreel-web.mp4    (crf 23, 12Mbps 상한)
+FFMPEG=<ffmpeg 경로> node promo/reel/render.js --vertical
+#  → promo/patient-zero-showreel-vertical.mp4      (1080×1920)
+#  → promo/patient-zero-showreel-vertical-web.mp4
 ```
+
+**세로판(쇼츠·릴스)** 은 다시 찍지 않는다 — 다 구운 가로판을 폭에 맞춰 가운데 놓고,
+위아래 656px 는 같은 화면을 **늘여서** 흐리게 깐다(몇 초면 끝난다).
+가운데만 잘라 키우면 한쪽에만 밝은 덩어리가 생겨 화면이 기운다 — 늘인 판은
+위아래가 가운데 그림과 이어져 이음매가 안 보인다. 비네트로 귀퉁이를 눌러 눈을 가운데로 모으고,
+가는 선 두 줄로 가운데 판을 세운다. 가운데 그림은 y 656–1264 라 쇼츠·릴스의 UI 안전 영역 안에 든다.
 
 몇 장만 보고 싶으면 `--preview 4.35,9.4,13.2` → `$REEL_OUT/preview/`.
 브라우저에서 `comp.html` 을 열고 **스페이스**를 누르면 그 자리에서 돌아간다(`?t=6.2` 로 한 장면만 볼 수도 있다).
