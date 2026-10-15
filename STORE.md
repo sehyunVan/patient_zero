@@ -126,6 +126,21 @@ Apple 콘솔의 Identifiers 목록에서 세 앱이 나란히 보이고, 심사 
 > 앱 안에서 **구글 로그인은 아직 못 연다** — 구글이 WebView 의 OAuth 를 막는다(`disallowed_useragent`).
 > 네이티브 플러그인(`@capgo/capacitor-social-login`)으로 바꿔야 열린다. 그때까지 앱의 실질 수단은 **메일 코드**다.
 
+### 앱 안의 로그인 — 네이티브 플러그인 (2026-10-15)
+
+`@capgo/capacitor-social-login` 을 붙였다. **구글이 WebView 안의 OAuth 를 막기** 때문이다(`disallowed_useragent`) —
+팝업을 열면 시스템 브라우저로 나가고, 거기서 로그인이 끝나도 **앱으로 돌아올 길이 없다**(창이 다르다).
+
+| 판 | 구글 | 애플 |
+|---|---|---|
+| 웹 | 팝업 + fragment → `oauth.html` | 팝업 + form_post → `POST /api/auth/apple` |
+| 안드로이드 | 플러그인(Credential Manager) — **웹 클라이언트 ID** 를 넘긴다 | 안 띄운다 |
+| iOS | 플러그인 — iOS 클라이언트 ID | 플러그인(OS 창), 토큰의 aud 는 **번들 ID** |
+
+- 안드로이드에서 **웹** 클라이언트 ID 를 넘기는 게 급소다. 안드로이드 클라이언트 ID 로는 ID 토큰이 안 나온다.
+  그 대신 콘솔에 **패키지명 + 서명 지문**이 등록돼 있어야 한다(디버그·업로드·Play 재서명 셋이 다르다).
+- 플러그인이 없으면 단추를 **꺼 둔다** — 눌리는데 안 되는 단추보다 낫다. 화면에 「앱에서는 준비 중」.
+- 서버는 네 가지 aud 를 받는다: 구글 웹·구글 iOS·애플 번들·애플 Services ID.
 **애플 콘솔에서 걸린 자리.** Domains 칸은 **도메인만** 받는다 — `https://` 나 경로를 넣으면
 「One or more domains are invalid」로 막힌다. 도메인은 `home.165-227-196-68.sslip.io`,
 Return URL 은 `https://home.165-227-196-68.sslip.io/patient-zero/api/auth/apple` 전체 주소다.
@@ -165,7 +180,8 @@ npm run aab                 # 굽기 → cap sync android → bundleRelease 를 
 `npm run aab` 은 `tools/build-aab.mjs` 를 부른다 — 굽기·동기화·gradle 을 **순서대로, 실패하면 거기서 멈춘다.**
 gradle 래퍼 이름이 판마다 달라서(`gradlew.bat` / `gradlew`) 그 선택도 여기서 한다.
 
-버전을 올릴 때는 `mobile/android/app/build.gradle` 의 둘을 같이 고친다:
+버전은 `npm run aab -- --bump` 으로 올린다(versionCode +1). 손으로 고치려면
+`mobile/android/app/build.gradle` 의 둘을 같이 본다:
 `versionCode`(스토어가 보는 번호, 같은 번호는 두 번 못 올린다) · `versionName`(사람이 보는 이름).
 
 ### iOS (맥에서만)
@@ -247,7 +263,7 @@ mobile/android/              가로 고정(sensorLandscape) · 아이콘 5크기
 
 | | 값 |
 |---|---|
-| versionCode / versionName | `26101501` / `1.0.1015` |
+| versionCode / versionName | `26101502` / `1.0.1015b` (26101501 은 이미 올렸다 — **같은 번호는 두 번 못 쓴다**) |
 | 업로드 키 | `C:/Users/sehyu/keys/patientzero-upload.jks` (별칭 `patientzero`) — **저장소 밖** |
 | 업로드 키 SHA-1 | `49:56:3C:9A:22:C5:1A:73:A7:BB:12:D0:D3:B6:2A:90:12:B4:1C:8C` ← 구글 OAuth 콘솔에 넣는다 |
 | 번들에 박힌 서버 주소 | `https://home.165-227-196-68.sslip.io/patient-zero` |

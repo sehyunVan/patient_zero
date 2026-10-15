@@ -76,15 +76,14 @@ window.Auth = (() => {
      웹: Services ID 가 있어야 한다(서버가 appleWeb 으로 알려 준다). 없으면 눌러도 못 간다.
      iOS 앱: 네이티브 플러그인이 토큰을 준다 — 아직 안 붙였으므로 지금은 꺼 둔다.
      「켜져 있는데 안 되는 단추」보다 꺼진 단추가 낫다(2026-10-15 에 그 단추를 실제로 만들었다). */
-  const appleUsable = on => platform() === 'ios'
-    ? !!(window.Capacitor?.Plugins?.SignInWithApple && on.apple)
-    : !!on.appleWeb;
+  const appleUsable = on => platform() === 'ios' ? !!(native() && on.apple) : !!on.appleWeb;
   /* 구글도 같다. 앱 안(WebView)에서는 구글이 OAuth 를 **막는다**(disallowed_useragent) —
      팝업은 열리지만 「이 브라우저에서는 로그인할 수 없습니다」로 끝난다.
      네이티브 플러그인을 붙이기 전까지 앱에서는 꺼 둔다. 웹에서는 팝업 흐름으로 된다. */
-  const googleUsable = on => platform() === 'web'
-    ? !!on.google
-    : !!(window.Capacitor?.Plugins?.SocialLogin && on.google);
+  // 앱에서는 **네이티브 창**으로 연다(구글이 WebView 안의 OAuth 를 막는다 — disallowed_useragent).
+  // 플러그인이 없으면 꺼 둔다: 눌리는데 안 되는 단추보다 꺼진 단추가 낫다.
+  const native = () => window.Capacitor?.Plugins?.SocialLogin || null;
+  const googleUsable = on => platform() === 'web' ? !!on.google : !!(native() && on.google);
 
   /* ── 화면 ── */
   function view(state, message) {
@@ -167,10 +166,12 @@ window.Auth = (() => {
        애플은 **POST(form_post)** 로 주므로 서버가 직접 받아 검증하고 **세션**을 돌려준다. */
   async function start(provider) {
     try {
-      if (provider === 'google') {
-        await signInWithToken('google', await googleToken());
+      if (native()) {
+        await signInWithToken(provider, await nativeToken(provider));   // 앱 — 네이티브 창
+      } else if (provider === 'google') {
+        await signInWithToken('google', await googleToken());        // 웹 — 팝업 + fragment
       } else {
-        remember(await appleSession());
+        remember(await appleSession());                              // 웹 — 팝업 + form_post(서버가 받는다)
       }
       open('signed');
     } catch (e) { open('start', e.message === 'cancelled' ? '' : '로그인하지 못했습니다 — ' + e.message); }
@@ -210,6 +211,29 @@ window.Auth = (() => {
       window.addEventListener('message', onMessage);
       const watch = setInterval(() => { if (win.closed) done(reject, new Error('cancelled')); }, 500);
     });
+  }
+  /* 앱의 로그인 — @capgo/capacitor-social-login 이 **OS 의 창**을 띄운다.
+     안드로이드: 구글 Credential Manager. 넘길 것은 **웹 클라이언트 ID**(serverClientId) 다 —
+       안드로이드 클라이언트 ID 로는 ID 토큰이 안 나온다. 그 대신 콘솔에 패키지+서명 지문이 등록돼 있어야 한다.
+     iOS: 구글은 iOS 클라이언트 ID, 애플은 OS 가 직접 — 이때 토큰의 aud 는 **번들 ID** 다(서버가 둘 다 받는다).
+     한 번만 initialize 하고, 그다음부터는 login 만 부른다. */
+  let nativeReady = null;
+  function nativeInit() {
+    if (nativeReady) return nativeReady;
+    nativeReady = native().initialize({
+      google: { webClientId: config.googleClientId, iOSClientId: config.googleIosClientId || undefined },
+      apple: { clientId: config.appleClientId || undefined, redirectUrl: config.appleRedirect || undefined },
+    });
+    return nativeReady;
+  }
+  async function nativeToken(provider) {
+    await nativeInit();
+    let res;
+    try { res = await native().login({ provider, options: provider === 'google' ? { scopes: ['email'] } : { scopes: ['email'] } }); }
+    catch (e) { throw new Error(/cancel/i.test(String(e?.message || e)) ? 'cancelled' : String(e?.message || e)); }
+    const token = res?.result?.idToken;
+    if (!token) throw new Error('no-id-token');
+    return token;
   }
   /* 애플 — 애플의 JS SDK 를 쓰지 않는다. 그 SDK 는 팝업/리디렉트 처리를 제 방식대로 하는데,
      우리는 **서버가 Return URL 을 받는** 모양이라 둘이 맞지 않는다. 주소를 직접 열고 서버를 기다린다.

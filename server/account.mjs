@@ -100,6 +100,8 @@ const enabled = () => ({
   appleWeb: !!process.env.APPLE_SERVICES_ID,
   mail: !!process.env.RESEND_API_KEY,
   googleClientId: process.env.GOOGLE_WEB_CLIENT_ID || '',
+  // 앱(네이티브 플러그인)이 iOS 에서 쓰는 클라이언트 ID — 웹은 안 쓴다
+  googleIosClientId: process.env.GOOGLE_IOS_CLIENT_ID || '',
   appleClientId: process.env.APPLE_SERVICES_ID || '',
   appleRedirect: process.env.APPLE_REDIRECT || '',
 });

@@ -25,6 +25,16 @@ function run(cmd, args, cwd, shell = false) {
   if (r.status !== 0) { console.error('\n실패: ' + cmd + ' (' + r.status + ')'); process.exit(r.status || 1); }
 }
 
+/* --bump: versionCode 를 1 올린다. **같은 번호는 두 번 못 올린다** —
+   Play 가 「이미 사용되었습니다」로 막고, 그때는 빌드를 통째로 다시 해야 한다. */
+if (process.argv.includes('--bump')) {
+  const g = path.join(ANDROID, 'app/build.gradle');
+  const src = fs.readFileSync(g, 'utf8');
+  const cur = Number(src.match(/versionCode (d+)/)[1]);
+  fs.writeFileSync(g, src.replace(/versionCode d+/, 'versionCode ' + (cur + 1)));
+  console.log('versionCode ' + cur + ' → ' + (cur + 1));
+}
+
 run(process.execPath, [path.join(ROOT, 'tools/pack-mobile.mjs'), ...process.argv.slice(2)], ROOT);
 run(process.execPath, [path.join(MOBILE, 'node_modules/@capacitor/cli/bin/capacitor'), 'sync', 'android'], MOBILE);
 run(path.join(ANDROID, win ? 'gradlew.bat' : 'gradlew'), ['bundleRelease'], ANDROID, win);
