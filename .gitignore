@@ -1,0 +1,26 @@
+# 서명 열쇠와 비밀 — 새면 남이 우리 이름으로 앱을 올린다
+*.jks
+*.p8
+mobile/android/keystore.properties
+server/.env
+
+# 구운 것 (언제든 다시 만든다)
+dist/
+fonts/
+mobile/node_modules/
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/app/src/main/assets/public/
+shots/
+assets/src/
+
+# 용량 — 저장소에 넣지 않는다(다시 만들 수 있거나, 스토어 콘솔에만 올라간다)
+# 제출용 스크린샷 36장 — 332MB. 스토어 콘솔에만 올라간다(tools/store-shots.mjs 로 다시 찍는다)
+site/appstore/
+site/play/
+# 20초 티저 마스터·웹판 — 62MB (promo/README.md 의 순서대로 다시 굽는다)
+# 하위 폴더(promo/v1 …)까지 — 영상은 한 장도 넣지 않는다
+*.mp4
+mobile/android/app/release/

@@ -1,0 +1,20 @@
+/* 스토어가 URL 로 요구하는 문서들의 옷. 감염판의 어두운 바탕을 그대로 쓰되 읽기 위한 폭으로.
+   게임 안이 아니므로 글꼴은 시스템 것 — 이 세 장을 위해 폰트를 받게 하지 않는다. */
+:root{--bg:#06090f;--card:#0b1119;--ink:#e6f1f7;--soft:#8aa2b4;--line:#1d2c3c;--neon:#ff5f74;--warn:#ff9aa6}
+*{box-sizing:border-box}
+body{margin:0;padding:44px 20px 90px;background:var(--bg);color:var(--ink);
+  font:15px/1.85 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+main{max-width:650px;margin:0 auto}
+h1{font-size:23px;margin:0 0 6px;letter-spacing:-.01em}
+.sub{color:var(--soft);font-size:13px;margin:0 0 30px}
+h2{font-size:15.5px;margin:34px 0 8px;padding-top:18px;border-top:1px solid var(--line)}
+ul{padding-left:20px;margin:8px 0}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0}
+.box b{color:var(--neon)}
+.box.warn b{color:var(--warn)}
+code{background:var(--card);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13px}
+a{color:var(--neon)}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--soft);font-weight:600;font-size:13px}
+footer{margin-top:44px;color:var(--soft);font-size:12.5px}

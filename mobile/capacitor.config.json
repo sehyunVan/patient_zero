@@ -1,0 +1,25 @@
+{
+  "appId": "sarl.patientzero.app",
+  "appName": "최초 감염자",
+  "webDir": "../dist/mobile",
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false,
+    "adjustMarginsForEdgeToEdge": "disable"
+  },
+  "ios": {
+    "contentInset": "never"
+  },
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "launchShowDuration": 0,
+      "backgroundColor": "#060a10",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false
+    }
+  }
+}

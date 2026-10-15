@@ -1,0 +1,597 @@
+{
+  "generated": "2026-10-14",
+  "groups": [
+    {
+      "path": "appstore/iphone-6.9",
+      "required": "2796×1290",
+      "count": 6,
+      "files": [
+        {
+          "file": "01-outbreak.png",
+          "px": "2796×1290",
+          "alpha": false,
+          "kb": 3646
+        },
+        {
+          "file": "02-dash.png",
+          "px": "2796×1290",
+          "alpha": false,
+          "kb": 3609
+        },
+        {
+          "file": "03-lobby.png",
+          "px": "2796×1290",
+          "alpha": false,
+          "kb": 3450
+        },
+        {
+          "file": "04-chapters.png",
+          "px": "2796×1290",
+          "alpha": false,
+          "kb": 3592
+        },
+        {
+          "file": "05-characters.png",
+          "px": "2796×1290",
+          "alpha": false,
+          "kb": 3206
+        },
+        {
+          "file": "06-recruit.png",
+          "px": "2796×1290",
+          "alpha": false,
+          "kb": 4065
+        }
+      ]
+    },
+    {
+      "path": "appstore/iphone-6.5",
+      "required": "2778×1284",
+      "count": 6,
+      "files": [
+        {
+          "file": "01-outbreak.png",
+          "px": "2778×1284",
+          "alpha": false,
+          "kb": 3548
+        },
+        {
+          "file": "02-dash.png",
+          "px": "2778×1284",
+          "alpha": false,
+          "kb": 3527
+        },
+        {
+          "file": "03-lobby.png",
+          "px": "2778×1284",
+          "alpha": false,
+          "kb": 3427
+        },
+        {
+          "file": "04-chapters.png",
+          "px": "2778×1284",
+          "alpha": false,
+          "kb": 3567
+        },
+        {
+          "file": "05-characters.png",
+          "px": "2778×1284",
+          "alpha": false,
+          "kb": 3138
+        },
+        {
+          "file": "06-recruit.png",
+          "px": "2778×1284",
+          "alpha": false,
+          "kb": 4026
+        }
+      ]
+    },
+    {
+      "path": "appstore/ipad-13",
+      "required": "2752×2064",
+      "count": 6,
+      "files": [
+        {
+          "file": "01-outbreak.png",
+          "px": "2752×2064",
+          "alpha": false,
+          "kb": 4675
+        },
+        {
+          "file": "02-dash.png",
+          "px": "2752×2064",
+          "alpha": false,
+          "kb": 4628
+        },
+        {
+          "file": "03-lobby.png",
+          "px": "2752×2064",
+          "alpha": false,
+          "kb": 4276
+        },
+        {
+          "file": "04-chapters.png",
+          "px": "2752×2064",
+          "alpha": false,
+          "kb": 4301
+        },
+        {
+          "file": "05-characters.png",
+          "px": "2752×2064",
+          "alpha": false,
+          "kb": 3448
+        },
+        {
+          "file": "06-recruit.png",
+          "px": "2752×2064",
+          "alpha": false,
+          "kb": 4918
+        }
+      ]
+    },
+    {
+      "path": "play/phone",
+      "required": "1920×1080",
+      "count": 6,
+      "files": [
+        {
+          "file": "01-outbreak.png",
+          "px": "1920×1080",
+          "alpha": false,
+          "kb": 990
+        },
+        {
+          "file": "02-dash.png",
+          "px": "1920×1080",
+          "alpha": false,
+          "kb": 2414
+        },
+        {
+          "file": "03-lobby.png",
+          "px": "1920×1080",
+          "alpha": false,
+          "kb": 2296
+        },
+        {
+          "file": "04-chapters.png",
+          "px": "1920×1080",
+          "alpha": false,
+          "kb": 2257
+        },
+        {
+          "file": "05-characters.png",
+          "px": "1920×1080",
+          "alpha": false,
+          "kb": 1908
+        },
+        {
+          "file": "06-recruit.png",
+          "px": "1920×1080",
+          "alpha": false,
+          "kb": 2604
+        }
+      ]
+    },
+    {
+      "path": "play/tablet",
+      "required": "2560×1440",
+      "count": 6,
+      "files": [
+        {
+          "file": "01-outbreak.png",
+          "px": "2560×1440",
+          "alpha": false,
+          "kb": 3949
+        },
+        {
+          "file": "02-dash.png",
+          "px": "2560×1440",
+          "alpha": false,
+          "kb": 3942
+        },
+        {
+          "file": "03-lobby.png",
+          "px": "2560×1440",
+          "alpha": false,
+          "kb": 3608
+        },
+        {
+          "file": "04-chapters.png",
+          "px": "2560×1440",
+          "alpha": false,
+          "kb": 3643
+        },
+        {
+          "file": "05-characters.png",
+          "px": "2560×1440",
+          "alpha": false,
+          "kb": 3033
+        },
+        {
+          "file": "06-recruit.png",
+          "px": "2560×1440",
+          "alpha": false,
+          "kb": 4194
+        }
+      ]
+    },
+    {
+      "path": "appstore/promo/header-3840x1646.png",
+      "required": "3840×1646",
+      "count": 1,
+      "files": [
+        {
+          "file": "header-3840x1646.png",
+          "px": "3840×1646",
+          "alpha": false,
+          "kb": 10101
+        }
+      ]
+    },
+    {
+      "path": "appstore/promo/header-5244x2950.png",
+      "required": "5244×2950",
+      "count": 1,
+      "files": [
+        {
+          "file": "header-5244x2950.png",
+          "px": "5244×2950",
+          "alpha": false,
+          "kb": 21022
+        }
+      ]
+    },
+    {
+      "path": "appstore/promo/search-1920x1280.png",
+      "required": "1920×1280",
+      "count": 1,
+      "files": [
+        {
+          "file": "search-1920x1280.png",
+          "px": "1920×1280",
+          "alpha": false,
+          "kb": 4667
+        }
+      ]
+    },
+    {
+      "path": "appstore/promo/search-3840x2560.png",
+      "required": "3840×2560",
+      "count": 1,
+      "files": [
+        {
+          "file": "search-3840x2560.png",
+          "px": "3840×2560",
+          "alpha": false,
+          "kb": 14934
+        }
+      ]
+    },
+    {
+      "path": "appstore/icon-1024x1024.png",
+      "required": "1024×1024",
+      "count": 1,
+      "files": [
+        {
+          "file": "icon-1024x1024.png",
+          "px": "1024×1024",
+          "alpha": false,
+          "kb": 2300
+        }
+      ]
+    },
+    {
+      "path": "play/icon-512x512.png",
+      "required": "512×512",
+      "count": 1,
+      "files": [
+        {
+          "file": "icon-512x512.png",
+          "px": "512×512",
+          "alpha": false,
+          "kb": 602
+        }
+      ]
+    },
+    {
+      "path": "play/feature-graphic-1024x500.png",
+      "required": "1024×500",
+      "count": 1,
+      "files": [
+        {
+          "file": "feature-graphic-1024x500.png",
+          "px": "1024×500",
+          "alpha": false,
+          "kb": 1132
+        }
+      ]
+    },
+    {
+      "path": "appstore/iphone-6.9-en",
+      "required": "2796×1290",
+      "count": 6,
+      "files": [
+        {
+          "file": "01-outbreak.png",
+          "px": "2796×1290",
+          "alpha": false,
+          "kb": 3573
+        },
+        {
+          "file": "02-dash.png",
+          "px": "2796×1290",
+          "alpha": false,
+          "kb": 3577
+        },
+        {
+          "file": "03-lobby.png",
+          "px": "2796×1290",
+          "alpha": false,
+          "kb": 3501
+        },
+        {
+          "file": "04-chapters.png",
+          "px": "2796×1290",
+          "alpha": false,
+          "kb": 3665
+        },
+        {
+          "file": "05-characters.png",
+          "px": "2796×1290",
+          "alpha": false,
+          "kb": 3231
+        },
+        {
+          "file": "06-recruit.png",
+          "px": "2796×1290",
+          "alpha": false,
+          "kb": 4109
+        }
+      ]
+    },
+    {
+      "path": "appstore/iphone-6.5-en",
+      "required": "2778×1284",
+      "count": 6,
+      "files": [
+        {
+          "file": "01-outbreak.png",
+          "px": "2778×1284",
+          "alpha": false,
+          "kb": 1406
+        },
+        {
+          "file": "02-dash.png",
+          "px": "2778×1284",
+          "alpha": false,
+          "kb": 3543
+        },
+        {
+          "file": "03-lobby.png",
+          "px": "2778×1284",
+          "alpha": false,
+          "kb": 3478
+        },
+        {
+          "file": "04-chapters.png",
+          "px": "2778×1284",
+          "alpha": false,
+          "kb": 3638
+        },
+        {
+          "file": "05-characters.png",
+          "px": "2778×1284",
+          "alpha": false,
+          "kb": 3161
+        },
+        {
+          "file": "06-recruit.png",
+          "px": "2778×1284",
+          "alpha": false,
+          "kb": 4070
+        }
+      ]
+    },
+    {
+      "path": "appstore/ipad-13-en",
+      "required": "2752×2064",
+      "count": 6,
+      "files": [
+        {
+          "file": "01-outbreak.png",
+          "px": "2752×2064",
+          "alpha": false,
+          "kb": 4627
+        },
+        {
+          "file": "02-dash.png",
+          "px": "2752×2064",
+          "alpha": false,
+          "kb": 4618
+        },
+        {
+          "file": "03-lobby.png",
+          "px": "2752×2064",
+          "alpha": false,
+          "kb": 4322
+        },
+        {
+          "file": "04-chapters.png",
+          "px": "2752×2064",
+          "alpha": false,
+          "kb": 4383
+        },
+        {
+          "file": "05-characters.png",
+          "px": "2752×2064",
+          "alpha": false,
+          "kb": 3490
+        },
+        {
+          "file": "06-recruit.png",
+          "px": "2752×2064",
+          "alpha": false,
+          "kb": 4968
+        }
+      ]
+    },
+    {
+      "path": "play/phone-en",
+      "required": "1920×1080",
+      "count": 6,
+      "files": [
+        {
+          "file": "01-outbreak.png",
+          "px": "1920×1080",
+          "alpha": false,
+          "kb": 2455
+        },
+        {
+          "file": "02-dash.png",
+          "px": "1920×1080",
+          "alpha": false,
+          "kb": 2421
+        },
+        {
+          "file": "03-lobby.png",
+          "px": "1920×1080",
+          "alpha": false,
+          "kb": 2331
+        },
+        {
+          "file": "04-chapters.png",
+          "px": "1920×1080",
+          "alpha": false,
+          "kb": 2296
+        },
+        {
+          "file": "05-characters.png",
+          "px": "1920×1080",
+          "alpha": false,
+          "kb": 1929
+        },
+        {
+          "file": "06-recruit.png",
+          "px": "1920×1080",
+          "alpha": false,
+          "kb": 2623
+        }
+      ]
+    },
+    {
+      "path": "play/tablet-en",
+      "required": "2560×1440",
+      "count": 6,
+      "files": [
+        {
+          "file": "01-outbreak.png",
+          "px": "2560×1440",
+          "alpha": false,
+          "kb": 3965
+        },
+        {
+          "file": "02-dash.png",
+          "px": "2560×1440",
+          "alpha": false,
+          "kb": 3943
+        },
+        {
+          "file": "03-lobby.png",
+          "px": "2560×1440",
+          "alpha": false,
+          "kb": 3656
+        },
+        {
+          "file": "04-chapters.png",
+          "px": "2560×1440",
+          "alpha": false,
+          "kb": 3712
+        },
+        {
+          "file": "05-characters.png",
+          "px": "2560×1440",
+          "alpha": false,
+          "kb": 3069
+        },
+        {
+          "file": "06-recruit.png",
+          "px": "2560×1440",
+          "alpha": false,
+          "kb": 4240
+        }
+      ]
+    },
+    {
+      "path": "play/feature-graphic-1024x500-en.png",
+      "required": "1024×500",
+      "count": 1,
+      "files": [
+        {
+          "file": "feature-graphic-1024x500-en.png",
+          "px": "1024×500",
+          "alpha": false,
+          "kb": 1144
+        }
+      ]
+    }
+  ],
+  "icons": [
+    {
+      "file": "icons/app-icon-512.png",
+      "px": "512×512",
+      "alpha": false,
+      "kb": 602
+    },
+    {
+      "file": "icons/app-icon-192.png",
+      "px": "192×192",
+      "alpha": false,
+      "kb": 91
+    },
+    {
+      "file": "icons/app-icon-48.png",
+      "px": "48×48",
+      "alpha": false,
+      "kb": 6
+    },
+    {
+      "file": "icons/app-icon-32.png",
+      "px": "32×32",
+      "alpha": false,
+      "kb": 3
+    },
+    {
+      "file": "icons/app-icon-16.png",
+      "px": "16×16",
+      "alpha": false,
+      "kb": 1
+    },
+    {
+      "file": "icons/apple-touch-icon.png",
+      "px": "180×180",
+      "alpha": false,
+      "kb": 80
+    },
+    {
+      "file": "icons/app-icon-maskable-512.png",
+      "px": "512×512",
+      "alpha": true,
+      "kb": 365
+    },
+    {
+      "file": "icons/store/app-icon-1024.png",
+      "px": "1024×1024",
+      "alpha": false,
+      "kb": 2300
+    },
+    {
+      "file": "icons/favicon.ico",
+      "px": "16×16 · 32×32 · 48×48",
+      "alpha": true,
+      "kb": 10
+    }
+  ],
+  "ok": true,
+  "problems": []
+}

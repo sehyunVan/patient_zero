@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#060a10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>PATIENT ZERO — 최초 감염자</title>
+<link rel="icon" href="icons/favicon.ico?v=20261014-zero" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/app-icon-32.png?v=20261014-zero">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/app-icon-192.png?v=20261014-zero">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/app-icon-512.png?v=20261014-zero">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=20261014-zero">
+<link rel="manifest" href="manifest.webmanifest?v=20261014-zero">
+<script>/* PC 에서 로컬 파일로 열면 폰 가로 미리보기(phone.html)로 넘긴다 — 폰을 들고 디버깅하지 않아도 되게.
+   넘어가지 않는 경우: 실제 터치 기기 · 미리보기 iframe 안 · 자동화 브라우저(스모크 테스트) · 주소에 ?desktop.
+   서버로 열었을 때도 ?phone 을 붙이면 미리보기로 간다. */
+(function(){ try{
+  var q=new URLSearchParams(location.search);
+  if(window.top!==window||navigator.webdriver||q.has('desktop')) return;
+  var local=location.protocol==='file:', touch=matchMedia('(pointer: coarse)').matches;
+  if(q.has('phone')||(local&&!touch)) location.replace('phone.html'+(q.get('phone')?'?device='+encodeURIComponent(q.get('phone')):'')+location.hash);
+ }catch(e){} })();
+</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;0,800;0,900;1,800;1,900&family=Gothic+A1:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700&display=block">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=block">
+  <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="panels.css">
+<link rel="stylesheet" href="interaction-feedback.css">
+<link rel="stylesheet" href="touch-feedback.css">
+<!-- 계정 서버 주소. 로그인·클라우드 저장·순위가 전부 이 한 줄을 본다(js/auth.js · js/ranking.js).
+     같은 호스트의 하위 경로라 상대 주소로 둔다 — 로컬에서 열면 비어 있어서 셋 다 꺼진 채로 뜬다.
+     앱(Capacitor)은 출처가 https://localhost 라, 번들을 구울 때 절대 주소로 바꿔 넣는다. -->
+<script>window.PZ_API = window.PZ_API || (location.protocol.startsWith('http') ? location.pathname.replace(/\/[^/]*$/, '') : '');</script>
+</head>
+<body data-mode="intro">
+<svg class="svg-defs" xmlns="http://www.w3.org/2000/svg"><defs>
+<symbol id="i-smoke" viewBox="0 0 24 24"><path d="M6 20a5 5 0 0 1-2-9 5 5 0 0 1 9-5 5 5 0 0 1 7 7 4 4 0 0 1-3 7z"/><path d="m9 17 2-5 4 3"/></symbol><symbol id="i-skull" viewBox="0 0 24 24"><path d="M5 16C0 5 7 2 12 2s12 3 7 14l-3 1v4H8v-4z"/><path d="M8 10h1m6 0h1m-5 6h2M11 21v-3m3 3v-3"/></symbol>
+<symbol id="i-run" viewBox="0 0 24 24"><circle cx="15" cy="4" r="2"/><path d="m9 9 4-2 4 4h4M4 12l5-3 2 6-4 6m5-9 4 5-1 5M3 5h5M1 8h4"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 2 9 4-2 10-7 6-7-6L3 6z"/><path d="M12 3v17m-8-9h16"/></symbol>
+<symbol id="i-pulse" viewBox="0 0 24 24"><path d="m13 2-9 12h7l-1 8 10-13h-8z"/></symbol>
+<symbol id="i-crown" viewBox="0 0 24 24"><path d="m3 6 5 5 4-8 4 8 5-5-3 14H6zM6 17h12"/></symbol>
+<symbol id="i-case" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V3h8v4M3 12h18m-9-2v5"/></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 0v5m0 14v5M0 12h5m14 0h5"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 8a3 3 0 0 1 6 0c0 3-3 2-3 6m0 2v2"/></symbol>
+<symbol id="i-cross" viewBox="0 0 24 24"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/></symbol>
+<symbol id="i-sound" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 8a6 6 0 0 1 0 8"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m3 6 9 7 9-7"/></symbol><symbol id="i-bell" viewBox="0 0 24 24"><path d="M5 17h14l-2-4V9a5 5 0 0 0-10 0v4zM10 21h4M12 2v2"/></symbol><symbol id="i-settings" viewBox="0 0 24 24"><path d="m9 3 1-2h4l1 2 3 2 3 1v4l-2 2 2 2v4l-3 1-3 2-1 2h-4l-1-2-3-2-3-1v-4l2-2-2-2V6l3-1z"/><circle cx="12" cy="12" r="4"/></symbol><symbol id="i-biohazard" viewBox="0 0 100 100"><g fill="currentColor" stroke="none"><path d="M50 4a46 46 0 1 0 0 92 46 46 0 0 0 0-92m0 7a39 39 0 1 1 0 78 39 39 0 0 1 0-78"/><circle cx="50" cy="50" r="9.5"/><path d="M50 13.5c-8.6 0-15.6 7-15.6 15.6 0 5 2.4 9.5 6.1 12.3l5-7.1a6.6 6.6 0 0 1-2.6-5.2 7.1 7.1 0 0 1 14.2 0c0 2.1-1 4-2.6 5.2l5 7.1a15.5 15.5 0 0 0 6.1-12.3c0-8.6-7-15.6-15.6-15.6"/><path d="M14 72.8a15.6 15.6 0 0 0 21.3 5.7 15.5 15.5 0 0 0 7.6-11.6l-8.7-.7a6.6 6.6 0 0 1-3.4 4.8 7.1 7.1 0 0 1-7.1-12.3c1.8-1.1 4-1.2 5.9-.5l3.6-7.9A15.6 15.6 0 0 0 19.7 51 15.6 15.6 0 0 0 14 72.8"/><path d="M86 72.8A15.6 15.6 0 0 0 80.3 51a15.6 15.6 0 0 0-13.5-.7l3.6 7.9c1.9-.7 4.1-.6 5.9.5a7.1 7.1 0 0 1-7.1 12.3 6.6 6.6 0 0 1-3.4-4.8l-8.7.7a15.5 15.5 0 0 0 7.6 11.6A15.6 15.6 0 0 0 86 72.8"/><path d="M50 38.5 38.3 18.3l-7.7 4.5 11.7 20.2zM61.4 43 73.1 22.8l-7.7-4.5L53.7 38.5zM58 56.3l23.3.2v-8.9l-23.3-.2zm-16 0-23.3.2v-8.9l23.3-.2zM44.5 62.6 32.8 82.8l7.7 4.5 11.7-20.2zm11 0 11.7 20.2 7.7-4.5-11.7-20.2z"/></g></symbol><symbol id="i-crown-solid" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M2 6.5 6.6 11 12 3.2 17.4 11 22 6.5 20 19H4zM4.6 20.4h14.8V22H4.6z"/></symbol><symbol id="i-bag" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M9 2h6a2 2 0 0 1 2 2v2h3a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3V4a2 2 0 0 1 2-2m.8 4h4.4V4.3H9.8zM11 9.4v2H8.9v2.3H11v2h2v-2h2.1v-2.3H13v-2z"/></symbol><symbol id="i-person" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M12 2.6a4.3 4.3 0 1 1 0 8.6 4.3 4.3 0 0 1 0-8.6m0 10.1c4.5 0 8.1 3.4 8.1 7.6 0 .6-.5 1.1-1.1 1.1H5c-.6 0-1.1-.5-1.1-1.1 0-4.2 3.6-7.6 8.1-7.6"/></symbol><symbol id="i-gear" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" fill-rule="evenodd" d="m9.6 1.7 4.8.1.6 2.4q.8.3 1.5.8l2.4-.8 2.4 4.1-1.8 1.7q.1.5.1.9t-.1.9l1.8 1.7-2.4 4.1-2.4-.8q-.7.5-1.5.8l-.6 2.4-4.8.1-.6-2.5q-.8-.3-1.5-.8l-2.4.8-2.4-4.1 1.8-1.7q-.1-.5-.1-.9t.1-.9L3.2 8.3l2.4-4.1 2.4.8q.7-.5 1.5-.8zM12 8.3a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2"/></symbol><symbol id="i-rotate" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/><path d="M12 2a5 5 0 0 1 5 5m0 0-2-2m2 2 2-2"/></symbol>
+<symbol id="i-home2" viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></symbol><symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8m-4-4v4"/></symbol><symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></symbol><symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20h4L20 8l-4-4L4 16z"/><path d="m14 6 4 4"/></symbol><symbol id="i-save" viewBox="0 0 24 24"><path d="M4 4h12l4 4v12H4z"/><path d="M8 4v6h8V6M8 20v-6h8v6"/></symbol><symbol id="i-radiation" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.6"/><path d="M12 2.2a9.8 9.8 0 0 1 4.9 1.3l-3.2 5.6a3.4 3.4 0 0 0-3.4 0L7.1 3.5A9.8 9.8 0 0 1 12 2.2z"/><path d="M21.3 17.9a9.8 9.8 0 0 0 .5-5l-6.4.5a3.4 3.4 0 0 1-1.7 2.9l3.2 5.6a9.8 9.8 0 0 0 4.4-4z"/><path d="M2.7 17.9a9.8 9.8 0 0 1-.5-5l6.4.5a3.4 3.4 0 0 0 1.7 2.9l-3.2 5.6a9.8 9.8 0 0 1-4.4-4z"/></symbol><symbol id="i-google" viewBox="0 0 48 48"><path fill="#4285F4" stroke="none" d="M45.1 24.5c0-1.6-.1-3.2-.4-4.7H24v8.9h11.8c-.5 2.7-2.1 5-4.4 6.6v5.5h7.1c4.1-3.8 6.6-9.4 6.6-16.3z"/><path fill="#34A853" stroke="none" d="M24 46c6 0 11-2 14.6-5.3l-7.1-5.5c-2 1.3-4.5 2.1-7.5 2.1-5.8 0-10.6-3.9-12.4-9.1H4.3v5.7C7.9 41.1 15.4 46 24 46z"/><path fill="#FBBC05" stroke="none" d="M11.6 28.2c-.4-1.3-.7-2.7-.7-4.2s.3-2.9.7-4.2v-5.7H4.3A22 22 0 0 0 2 24c0 3.6.9 6.9 2.3 9.9l7.3-5.7z"/><path fill="#EA4335" stroke="none" d="M24 10.8c3.3 0 6.2 1.1 8.5 3.3l6.3-6.3C35 4.3 30 2 24 2 15.4 2 7.9 6.9 4.3 14.1l7.3 5.7c1.8-5.2 6.6-9 12.4-9z"/></symbol><symbol id="i-apple" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.9-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.8-3-.8-1.5 0-2.9.9-3.7 2.3-1.6 2.7-.4 6.8 1.1 9 .8 1.1 1.7 2.3 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.2 0 2-1.1 2.8-2.2.9-1.3 1.2-2.5 1.3-2.6-.1 0-2.5-1-2.5-3.5zM14.1 5.3c.6-.8 1.1-1.9 1-3-.9 0-2.1.6-2.8 1.4-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.5 2.8-1.3z"/></symbol></defs></svg>
+
+<div class="app">
+  <div class="arena" id="arena">
+    <canvas id="game" aria-label="최초 감염자 — 감염 서바이벌"></canvas>
+    <div class="scene-grain"></div>
+
+    <!-- 플레이 중 HUD: 왼쪽 위 상태, 오른쪽 위 미니맵 -->
+    <div class="hud">
+      <div class="hud-left">
+        <div class="timer-line"><span class="live-dot"></span><strong id="time">01:30</strong><span id="wave">CH 1 · THREAT 01</span></div>
+        <div class="score-line"><svg><use href="#i-skull"/></svg><strong id="score">000</strong><small id="quota">/ 25명 통과</small></div>
+        <div class="vitals"><div class="health-track quota-track"><i id="quota-bar"></i></div><span id="quota-text">★☆☆</span></div>
+        <div class="vitals"><div class="health-track"><i id="health"></i></div><span id="hp-text">100%</span></div>
+        <div id="effect-status"></div><div id="combo">접촉해서 감염시키세요</div>
+      </div>
+      <div class="hud-right">
+        <div class="minimap-frame"><canvas id="minimap" width="150" height="72" aria-label="실시간 미니맵"></canvas><span>SECTOR 07</span></div>
+        <button id="pause" aria-label="일시정지">Ⅱ</button>
+      </div>
+    </div>
+
+    <div id="notice" class="notice" role="status"></div>
+
+    <!-- 조작은 양손 엄지 자리에: 왼쪽 아래 스틱, 오른쪽 아래 액션 -->
+    <div class="controls">
+      <div id="joystick" aria-label="이동 조이스틱"><i></i></div>
+      <div class="actions"><div id="tactical-actions"></div>
+        <button class="act" id="shield" data-action="shield" aria-label="방어막"><img class="icon-art" src="assets/icons/shield.webp" alt=""><b id="shield-count">2</b><kbd>Q</kbd></button>
+        <button class="act" id="pulse" data-action="pulse" aria-label="충격파"><img class="icon-art" src="assets/icons/pulse.webp" alt=""><b id="pulse-count">1</b><kbd>E</kbd></button>
+        <button class="act big" id="dash" data-action="dash" aria-label="대시"><img class="icon-art" src="assets/icons/dash.webp" alt=""><i class="cd"></i><kbd>SPACE</kbd></button>
+      </div>
+    </div>
+
+    <section id="lobby" aria-label="게임 로비" hidden>
+      <div class="hub-vignette"></div><button class="player-badge" data-lobby="profile" aria-label="개인 프로필"><img id="player-avatar" alt="프로필 캐릭터"><div><span id="player-level">Lv. 1</span><strong id="player-name">INFECTED_01</strong><progress id="player-xp" max="100" value="0"></progress><small id="player-xp-text">0 / 100</small></div></button><div class="lobby-utilities"><button data-lobby="inbox" aria-label="우편함"><svg><use href="#i-mail"/></svg><i id="mail-dot"></i></button><button data-lobby="notifications" aria-label="알림"><svg><use href="#i-bell"/></svg><i id="notification-dot"></i></button><button data-panel="settings" aria-label="설정"><svg><use href="#i-settings"/></svg></button></div>
+      <!-- 선택한 캐릭터가 로비에 반신으로 선다. 누르면 말한다 — 배경에는 아무도 없다(lobby-rooftop-empty). -->
+      <button class="hub-hero" id="hub-hero" aria-label="캐릭터에게 말 걸기"><img id="hub-hero-art" src="" alt=""></button>
+      <div class="hub-bubble" id="hub-bubble" role="status" hidden><b class="bubble-name" id="hub-bubble-name"></b><span class="bubble-line" id="hub-bubble-line"></span></div>
+      <nav class="hub-nav" aria-label="로비 메뉴">
+        <button class="active" id="hub-home" aria-current="page"><svg viewBox="0 0 100 100"><use href="#i-biohazard"/></svg><span>플레이<small>감염을 시작하세요</small></span></button>
+        <button data-panel="loadout"><svg><use href="#i-case"/></svg><span>아이템<small>전술 아이템 편성</small></span></button>
+        <button data-panel="record"><svg><use href="#i-crown"/></svg><span>랭킹<small>내 최고 기록 보기</small></span></button>
+        <button data-lobby="events"><svg><use href="#i-target"/></svg><span>이벤트<small>수집 보상 확인</small></span></button><button data-panel="settings"><svg><use href="#i-settings"/></svg><span>설정</span></button>
+      </nav>
+      <div class="hub-wallet" id="hub-wallet"></div><div class="hub-services"><button data-panel="characters"><svg><use href="#i-skull"/></svg>캐릭터 <span id="hub-character-name"></span></button><button data-panel="recruit"><svg><use href="#i-crown"/></svg>모집</button><button data-panel="inventory"><svg><use href="#i-case"/></svg>인벤토리</button><button data-panel="missions"><svg><use href="#i-target"/></svg>임무</button></div><aside class="hub-right"><button class="lobby-chapter-card" id="lobby-chapter-card"><div><small id="lobby-chapter-number"></small><h3 id="lobby-chapter-title"></h3><span id="lobby-chapter-clear"></span><p id="lobby-chapter-copy"></p></div><img id="lobby-chapter-image" alt="선택 챕터"><b>›</b></button><button class="lobby-event-card" data-lobby="events"><small>EVENT</small><strong>감염자 수집 이벤트</strong><span>캐릭터를 모으고 보상을 받으세요 ›</span></button><button class="lobby-daily-card" data-panel="missions"><svg><use href="#i-target"/></svg><div><strong>오늘의 도전 과제</strong><progress id="lobby-mission-progress" max="3" value="0"></progress></div><span id="lobby-mission-count">0 / 3</span></button>
+        <div class="hub-record"><svg><use href="#i-crown"/></svg><span>CHAPTER RECORD</span><small>이 챕터 최고 기록</small><div><strong id="hub-best">000</strong><span>/ <b id="hub-goal">300</b></span></div><div class="hub-progress"><i id="hub-progress"></i></div></div>
+        <div class="hub-deploy"><button id="hub-map" data-panel="maps"><small>챕터 선택</small><span id="hub-map-name">CHAPTER 1 · 첫 접촉</span><b>⌄</b></button><button id="hub-play" aria-label="플레이"><img class="play-face" id="hub-play-face" alt=""><img class="play-word" src="assets/play-word.webp" alt="PLAY"><svg class="play-mark" viewBox="0 0 100 100"><use href="#i-biohazard"/></svg></button><small class="hub-hint">도시를 감염시킬 준비가 되었나요?</small></div>
+      </aside>
+      <div class="lobby-promos"><button data-lobby="inbox"><small>NOTICE</small><strong>감염자 기록실 오픈</strong><span>프로필·모집·임무 안내 ›</span></button><button data-panel="recruit"><small>LIMITED PICK UP</small><strong>레아 한정 모집</strong><span>모집 화면으로 ›</span></button><button data-lobby="story"><small>CHAPTER STORY</small><strong>감염의 시작</strong><span>현재 챕터 이야기 ›</span></button></div><nav class="lobby-bottom" aria-label="하단 메뉴"><button class="active" data-lobby="home"><svg><use href="#i-skull"/></svg>홈</button><button data-panel="characters"><svg><use href="#i-skull"/></svg>캐릭터</button><button data-panel="inventory"><svg><use href="#i-case"/></svg>인벤토리</button><button data-panel="missions"><svg><use href="#i-target"/></svg>임무</button><button data-lobby="exchange"><svg><use href="#i-crown"/></svg>교환소</button></nav><div class="hub-caption"><span>SUBJECT 001</span><b>PATIENT ZERO</b></div>
+      <button id="back-title">‹ 시작 화면</button>
+    </section>
+    <!-- 챕터 선택 — PLAY 를 누르면 여기로. 목업 그대로(1404×790 기준)를 화면 높이에 맞춰 늘린다.
+         왼쪽 덩어리는 왼쪽에, 오른쪽 덩어리는 오른쪽에 붙고 가운데 카드열만 가운데에 선다 —
+         폰 가로(2.1:1)처럼 더 납작한 화면에서도 귀퉁이가 밀려나지 않게. -->
+    <!-- 인트로 컷신과 첫 전투 안내 -->
+    <div id="intro" hidden></div>
+    <div id="tutorial" hidden></div>
+    <section id="chapters" aria-label="챕터 선택" hidden>
+      <header class="cs-head">
+        <button id="chapter-back" aria-label="로비로"><svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8"/></svg></button>
+        <div class="cs-title"><b>챕터 선택</b><span>CHAPTER SELECT</span></div>
+        <button id="chapter-home" aria-label="홈으로"><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10h-6v-6H9v6H3z" fill="currentColor" stroke="none"/></svg></button>
+      </header>
+      <p class="cs-lede"><span>세상은 이미 감염되었다.</span><span>그리고, 이제 너도 그 일부다.</span></p>
+      <div class="cs-record">
+        <svg class="cs-biohazard" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-biohazard"/></svg>
+        <div><small>감염자 수</small><div class="cs-count"><b id="chapter-best">0</b><span id="chapter-goal">/ 0</span></div></div>
+        <svg class="cs-crown" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-crown-solid"/></svg>
+      </div>
+      <button id="chapter-close" aria-label="챕터 선택 닫기"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+
+      <button class="cs-arrow prev" id="rail-prev" aria-label="이전 챕터"><svg viewBox="0 0 24 24"><path d="M15 3 7 12l8 9"/></svg></button>
+      <div class="cs-rail" id="chapter-rail"></div>
+      <button class="cs-arrow next" id="rail-next" aria-label="다음 챕터"><svg viewBox="0 0 24 24"><path d="m9 3 8 9-8 9"/></svg></button>
+
+      <img class="cs-slogan" src="assets/chapter-slogan.webp" alt="더 많은 감염을, 더 높은 기록을." loading="lazy">
+      <div class="cs-steps" id="chapter-steps"></div>
+      <button id="chapter-preview"><img id="chapter-preview-art" alt=""><span><strong id="chapter-preview-title">다음 챕터 미리보기</strong><small id="chapter-preview-copy"></small></span><svg viewBox="0 0 24 24"><path d="m9 4 8 8-8 8"/></svg></button>
+      <nav class="cs-nav" aria-label="챕터 메뉴">
+        <button id="chapter-home-bottom"><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10h-6v-6H9v6H3z" fill="currentColor" stroke="none"/></svg><span>홈</span></button>
+        <button data-chpanel="inventory"><svg viewBox="0 0 24 24"><use href="#i-bag"/></svg><span>가방</span></button>
+        <button data-chpanel="characters"><svg viewBox="0 0 24 24"><use href="#i-person"/></svg><span>캐릭터</span></button>
+        <button data-chpanel="settings"><svg viewBox="0 0 24 24"><use href="#i-gear"/></svg><span>설정</span></button>
+      </nav>
+      <img class="cs-logo" src="assets/chapter-logo.webp" alt="INFECTION — THE WORLD IS YOURS." loading="lazy">
+    </section>
+    <!-- 시작 · 일시정지 · 종료 화면 -->
+    <div id="overlay" class="overlay">
+      <div class="lobby-shade"></div>
+      <div class="brandbar"><svg><use href="#i-skull"/></svg><b>PATIENT ZERO</b><span>최초 감염자</span></div>
+      <button id="title-settings" data-panel="settings" aria-label="설정"><svg><use href="#i-settings"/></svg></button><button id="sound" hidden aria-hidden="true"><svg><use href="#i-sound"/></svg><em>ON</em></button>
+      <div class="lobby-content">
+        <div class="eyebrow" id="overlay-kicker"><span></span> THE OUTBREAK STARTS WITH YOU</div>
+        <h1 id="overlay-title"><img class="infection-logo" src="assets/infection-logo.webp" alt="INFECTION — 세상을 감염시켜라." width="1904" height="832"></h1>
+        
+        <p id="overlay-copy"><b>당신이 최초 감염자입니다.</b><br>90초 안에 통과선을 넘겨 챕터를 하나씩 깨고, 남은 시간으로 기록을 미세요.</p>
+        <button class="primary" id="start"><svg><use href="#i-radiation"/></svg><span>로비 입장</span><b>▶</b></button>
+        <button class="secondary-start" id="login">로그인 하기</button>
+        <div id="overlay-note" class="intro-note">왼쪽 스틱 이동 <i>·</i> 오른쪽 버튼 대시 · 방어막 · 충격파</div>
+      </div>
+      <div class="operator-tag"><span>최초 감염자 / SUBJECT 001</span><strong>ZERO</strong><small>감염은 당신으로부터 시작된다.</small></div><div class="record-card"><svg><use href="#i-crown"/></svg><span>PERSONAL RECORD</span><div><strong id="best">000</strong><small>INFECTED</small></div></div>
+      <div class="mission-card"><div class="eyebrow">DEPLOYMENT / 챕터</div><button data-panel="maps" class="map-preview"><span id="map-sector">황혼의 광장 / 통과선 25명</span><strong id="map-name">CH 1 · 첫 접촉</strong><small>챕터 변경 ↗</small></button><div class="kit-heading">TACTICAL LOADOUT <span>장비 2종 편성</span></div><div id="loadout-preview"></div><button class="kit-edit" data-panel="loadout">장비 편성 <span>＋</span></button></div><div class="lobby-location"><span class="live-dot"></span> 황혼의 광장 <i>/</i> CHAPTER 1 ☆☆☆</div>
+      <nav class="menu-row" aria-label="게임 메뉴">
+        <button id="return-lobby"><svg><use href="#i-skull"/></svg><span>로비로</span></button><button data-panel="items"><svg><use href="#i-case"/></svg><span>생존 가이드</span></button>
+        <button data-panel="record"><svg><use href="#i-crown"/></svg><span>내 기록</span></button>
+        <button data-panel="maps"><svg><use href="#i-target"/></svg><span>챕터</span></button><button data-panel="help"><svg><use href="#i-help"/></svg><span>조작법</span></button>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- 세로로 들면 멈추고 돌려 달라고 한다 -->
+<div class="rotate-gate" id="rotate-gate"><svg><use href="#i-rotate"/></svg><strong>폰을 가로로 돌려 주세요</strong><span>PATIENT ZERO는 가로 화면 전용입니다</span></div>
+
+  <dialog id="login-dialog">
+    <button id="close-login" aria-label="닫기">×</button>
+    <div class="eyebrow"><span></span> ACCOUNT</div>
+    <h2>로그인</h2>
+    <div class="login-body"></div>
+  </dialog>
+<dialog id="info-dialog"><button id="close-dialog" aria-label="닫기">×</button><div class="eyebrow"><span></span> <em id="dialog-eyebrow">SURVIVAL GUIDE</em></div><h2 id="dialog-title"></h2><div id="dialog-content"></div></dialog>
+<script src="js/panels.js"></script><script src="i18n/bundle.js"></script><script src="js/i18n.js"></script><script src="js/cast.js"></script><script src="js/settings.js"></script><script src="js/auth.js"></script><script src="js/shop.js"></script><script src="js/expansion.js"></script><script src="js/recruit-reveal.js"></script><script src="js/progression.js"></script><script src="js/visuals.js"></script><script src="js/lobby-ui.js"></script><script src="js/intro.js"></script><script src="js/game.js"></script><script src="js/bgm.js"></script><script src="js/sfx.js"></script><script src="js/character-screen.js"></script><script src="js/ranking.js"></script><script src="js/main-character.js"></script><script src="js/photo.js"></script>
+<script src="js/interaction-feedback.js"></script>
+<script src="js/touch-feedback.js"></script>
+</body></html>

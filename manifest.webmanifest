@@ -1,0 +1,17 @@
+{
+  "name": "PATIENT ZERO — 최초 감염자",
+  "short_name": "PATIENT ZERO",
+  "description": "퍼뜨리는 쪽에 앉는 90초 좀비 서바이벌. 폰 가로 전용.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#060a10",
+  "theme_color": "#060a10",
+  "icons": [
+    { "src": "icons/app-icon-192.png?v=20261014-zero", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/app-icon-512.png?v=20261014-zero", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/app-icon-maskable-512.png?v=20261014-zero", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

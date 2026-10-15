@@ -1,0 +1,121 @@
+{
+ "지우지 못했습니다 —": {
+  "f": "js/auth.js",
+  "lack": [
+   "en",
+   "ja"
+  ]
+ },
+ "· 첫 통과 모집권 +${}": {
+  "f": "js/game.js",
+  "lack": [
+   "en",
+   "ja"
+  ]
+ },
+ "검체 +": {
+  "f": "js/lobby-ui.js",
+  "lack": [
+   "en",
+   "ja"
+  ]
+ },
+ "개 → 검체": {
+  "f": "js/progression.js",
+  "lack": [
+   "en",
+   "ja"
+  ]
+ },
+ ">보유 우선": {
+  "f": "js/progression.js",
+  "lack": [
+   "en",
+   "ja"
+  ]
+ },
+ ">이름순": {
+  "f": "js/progression.js",
+  "lack": [
+   "en",
+   "ja"
+  ]
+ },
+ "야간보행": {
+  "f": "js/ranking.js",
+  "lack": [
+   "en",
+   "ja"
+  ]
+ },
+ "감염자_07": {
+  "f": "js/ranking.js",
+  "lack": [
+   "en",
+   "ja"
+  ]
+ },
+ "첫차탑승": {
+  "f": "js/ranking.js",
+  "lack": [
+   "en",
+   "ja"
+  ]
+ },
+ "서울_0번": {
+  "f": "js/ranking.js",
+  "lack": [
+   "en",
+   "ja"
+  ]
+ },
+ "밤의산책": {
+  "f": "js/ranking.js",
+  "lack": [
+   "en",
+   "ja"
+  ]
+ },
+ "통행금지": {
+  "f": "js/ranking.js",
+  "lack": [
+   "en",
+   "ja"
+  ]
+ },
+ "마지막_칸": {
+  "f": "js/ranking.js",
+  "lack": [
+   "en",
+   "ja"
+  ]
+ },
+ "불꺼진역": {
+  "f": "js/ranking.js",
+  "lack": [
+   "en",
+   "ja"
+  ]
+ },
+ "명 생략": {
+  "f": "js/ranking.js",
+  "lack": [
+   "en",
+   "ja"
+  ]
+ },
+ "챕터와 상관없이 가장 높은 기록 하나로 줄을 세우고, 상위": {
+  "f": "js/ranking.js",
+  "lack": [
+   "en",
+   "ja"
+  ]
+ },
+ "위까지 보여 줍니다.": {
+  "f": "js/ranking.js",
+  "lack": [
+   "en",
+   "ja"
+  ]
+ }
+}

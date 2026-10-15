@@ -1,0 +1,34 @@
+# /etc/systemd/system/patient-zero-account.service
+#
+# PATIENT ZERO 계정 서버 — 로그인(구글·애플·메일 코드)과 클라우드 저장.
+# 의존성 없는 Node 프로세스 하나라 유닛도 한 장이면 된다.
+#
+# 주의: systemd 는 **줄 끝 주석을 값으로 읽는다.** ExecStart 나 Environment 줄 뒤에
+# "# 설명" 을 붙이면 그 글자가 인자로 들어간다(막차 이후에서 한 번 당했다).
+# 설명은 반드시 제 줄에 둔다.
+
+[Unit]
+Description=PATIENT ZERO account server (login, cloud save)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/patient-zero/server
+EnvironmentFile=/var/www/patient-zero/server/.env
+ExecStart=/usr/bin/node /var/www/patient-zero/server/account.mjs
+Restart=on-failure
+RestartSec=3
+# 127.0.0.1 로만 듣는다 — 앞단(Caddy)이 같은 기계에서 찔러 온다.
+# 이 박스에는 방화벽이 없어서 전 주소에 붙이면 평문으로 계정 API 가 열린다.
+Environment=HOST=127.0.0.1
+User=www-data
+Group=www-data
+StateDirectory=patient-zero
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/patient-zero
+
+[Install]
+WantedBy=multi-user.target

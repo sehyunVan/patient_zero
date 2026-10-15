@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PATIENT ZERO · 폰 미리보기</title>
+<link rel="icon" href="icons/favicon.ico?v=20261014-zero" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/app-icon-32.png?v=20261014-zero">
+<!-- PC 에서 폰 가로 화면을 그대로 본다.
+     게임을 그 기기의 CSS 화면 크기 그대로인 iframe 에 띄운다 — 게임 안의 미디어 쿼리·세계 비율은 실제 폰과 같은 값을 본다.
+     iframe 은 PC 창에 맞게 transform 으로만 확대한다(크기 자체는 기기 값 그대로). 고른 기기는 기억한다. -->
+<style>
+  :root{--bg:#04070c;--line:#24323a;--ink:#cfd8e2;--dim:#6f8290;--on:#ed3446}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:13px/1.2 system-ui,'Apple SD Gothic Neo','Malgun Gothic',sans-serif}
+  body{display:flex;flex-direction:column}
+  header{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid var(--line)}
+  header b{font-weight:600;margin-right:8px;letter-spacing:.04em}
+  button{font:inherit;color:var(--ink);background:#0b1118;border:1px solid var(--line);padding:5px 10px;cursor:pointer}
+  button:hover{border-color:var(--dim)}
+  button.on{border-color:var(--on);color:#fff}
+  button small{color:var(--dim);margin-left:4px}
+  .sp{flex:1}
+  main{flex:1;min-height:0;display:grid;place-items:center;overflow:hidden;padding:12px}
+  /* 기기 몸체 — 화면 크기는 CSS px 그대로, 보이는 크기는 scale 로 */
+  #device{position:relative;transform-origin:center center;border-radius:28px;padding:14px;background:#111418;
+          box-shadow:0 0 0 1px #2a3137,0 30px 60px -20px #000}
+  #screen{display:block;border:0;background:#000;border-radius:6px}
+  #meta{color:var(--dim);font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<header>
+  <b>폰 미리보기</b>
+  <span id="devices"></span>
+  <span class="sp"></span>
+  <span id="meta"></span>
+  <button id="reload" title="게임만 다시 불러온다">새로고침</button>
+  <button id="desktop" title="미리보기를 끄고 원래 화면으로">PC 화면</button>
+</header>
+<main><div id="device"><iframe id="screen" title="게임 화면" allow="fullscreen; autoplay"></iframe></div></main>
+<script>
+/* w×h = 그 기기에서 게임이 실제로 받는 가로 화면(CSS px). 아이폰 사파리는 노치 여백과 주소창을 뺀 값이다 */
+const DEVICES=[
+  {id:'iphone',      n:'아이폰 사파리', w:750, h:335},
+  {id:'iphone-home', n:'아이폰 홈 화면', w:844, h:390},
+  {id:'galaxy',      n:'갤럭시',       w:915, h:412},
+  {id:'se',          n:'아이폰 SE',    w:667, h:375},
+];
+const KEY='patientZero.phonePreview';
+const q=new URLSearchParams(location.search);
+let cur=DEVICES.find(d=>d.id===(q.get('device')||(()=>{try{return localStorage.getItem(KEY);}catch(e){return null;}})()))||DEVICES[1];
+const frame=document.getElementById('screen'), dev=document.getElementById('device');
+/* 게임 쪽 index.html 은 iframe 안에서는 다시 미리보기로 넘어오지 않는다(window.top 검사). ?desktop 은 그 표시를 분명히 한다 */
+const gameURL=hash=>'index.html?desktop'+(hash||'');
+function fit(){
+  frame.style.width=cur.w+'px'; frame.style.height=cur.h+'px';
+  const m=document.querySelector('main'), pad=28+24;
+  const s=Math.min((m.clientWidth-pad)/(cur.w+28),(m.clientHeight-pad)/(cur.h+28));
+  dev.style.transform=`scale(${Math.max(.25,s)})`;
+  document.getElementById('meta').textContent=`${cur.w}×${cur.h} · ×${s.toFixed(2)}`;
+}
+function render(){
+  document.getElementById('devices').innerHTML=DEVICES.map(d=>`<button data-id="${d.id}" class="${d.id===cur.id?'on':''}">${d.n}<small>${d.w}×${d.h}</small></button>`).join('');
+  document.querySelectorAll('#devices button').forEach(b=>b.onclick=()=>{ cur=DEVICES.find(d=>d.id===b.dataset.id); try{localStorage.setItem(KEY,cur.id);}catch(e){} render(); fit(); frame.src=gameURL(); });
+}
+document.getElementById('reload').onclick=()=>{ frame.src=gameURL(); };
+document.getElementById('desktop').onclick=()=>{ location.href=gameURL(location.hash); };
+addEventListener('resize',fit);
+render(); fit();
+frame.src=gameURL(location.hash);
+</script>
+</body>
+</html>
