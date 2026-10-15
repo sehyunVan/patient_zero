@@ -220,9 +220,13 @@ window.Auth = (() => {
   let nativeReady = null;
   function nativeInit() {
     if (nativeReady) return nativeReady;
+    /* 애플에는 **아무것도 넘기지 않는다.**
+       iOS 는 OS 가 직접 토큰을 주는데, redirectUrl 을 주면 플러그인이 그 뒤에 그 주소로 POST 해서
+       **3xx 리디렉트를 기다린다.** 우리 /api/auth/apple 은 웹 팝업용이라 200 HTML 을 돌려주고,
+       그래서 「Invalid response code: 200」으로 끝났다(2026-10-15 실기기에서 잡았다).
+       넘기지 않으면 플러그인이 토큰을 그대로 돌려주고, 검증은 늘 하던 대로 서버가 한다. */
     nativeReady = native().initialize({
       google: { webClientId: config.googleClientId, iOSClientId: config.googleIosClientId || undefined },
-      apple: { clientId: config.appleClientId || undefined, redirectUrl: config.appleRedirect || undefined },
     });
     return nativeReady;
   }
