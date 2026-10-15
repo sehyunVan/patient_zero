@@ -14,7 +14,7 @@ android {
         applicationId "sarl.patientzero.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 26101503
+        versionCode 26101504
         versionName "1.0.1015b"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {

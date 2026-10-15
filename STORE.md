@@ -204,11 +204,16 @@ cd mobile && npm run pack && npx cap sync ios
 npx cap open ios                      # Xcode
 ```
 
-Xcode 에서 **사람이 해야 하는 것 셋** (스크립트가 끝나면 다시 알려 준다):
+**「Signing for "App" requires a development team」이 뜨면** — 화면에는 팀이 보이는데 빌드만 그렇게 말한다.
+팀은 `project.pbxproj` 에 적히는데, 버전을 올리느라 그 파일을 커밋하면 맥이 `git pull` 하는 순간 날아간다.
+`node tools/ios-setup.mjs` 가 Debug·Release 양쪽에 팀(`FN9DUHVG65`)을 다시 박는다. 돌린 뒤 Xcode 를 닫았다 연다.
+**Xcode 를 열어 둔 채 `git pull` 하지 않는다** — 메모리의 옛 값이 그 파일을 되덮어쓴다(SHIPPING.md §4).
+
+Xcode 에서 **사람이 해야 하는 것** (스크립트가 끝나면 다시 알려 준다):
 
 | 자리 | 할 일 |
 |---|---|
-| Signing & Capabilities | Team 선택 · Bundle ID `sarl.patientzero.app` |
+| Signing & Capabilities | Bundle ID `sarl.patientzero.app` 확인 (Team 은 `ios-setup.mjs` 가 박는다) |
 | ＋ Capability | **Sign in with Apple** — 없으면 iOS 애플 로그인이 아예 안 뜬다 |
 | Edit Scheme → Run → Options | StoreKit Configuration = **None** (안 그러면 결제가 가짜 거래가 된다) |
 

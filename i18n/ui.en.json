@@ -749,5 +749,6 @@
  "지금 챕터입니다. 눌러서 다른 챕터를 고릅니다.": "This is the current Chapter. Tap to choose another Chapter.",
  "모집권은 캐릭터 모집에만, 검체는 아이템 상점에서 씁니다.": "Recruitment Tickets are only for Character Recruitment; Specimens are used in the ITEMS Shop.",
  "캐릭터 · 인벤토리 · 임무 · 교환소는 아래쪽입니다.": "Characters · Inventory · MISSIONS · Exchange are at the bottom.",
- "준비됐으면 출격. 한 판은 90초입니다.": "Ready? Deploy. Each run lasts 90 sec."
+ "준비됐으면 출격. 한 판은 90초입니다.": "Ready? Deploy. Each run lasts 90 sec.",
+ "로그인이 끝나지 않았습니다 — 계정을 골랐는데 돌아오지 않으면 서명 지문(SHA-1) 등록을 확인하세요. (${})": "Log In not completed — if you chose an Account and did not return, check the signing fingerprint (SHA-1) registration. (${})"
 }

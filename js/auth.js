@@ -174,7 +174,15 @@ window.Auth = (() => {
         remember(await appleSession());                              // 웹 — 팝업 + form_post(서버가 받는다)
       }
       open('signed');
-    } catch (e) { open('start', e.message === 'cancelled' ? '' : '로그인하지 못했습니다 — ' + e.message); }
+    } catch (e) {
+      const m = e.message || '';
+      // 웹의 팝업을 사람이 닫은 것만 조용히 넘긴다. 앱의 「취소」는 설정 문제일 때가 많아 적어 준다.
+      if (m === 'cancelled') return open('start', '');
+      if (m.startsWith('cancelled-native')) {
+        return open('start', '로그인이 끝나지 않았습니다 — 계정을 골랐는데 돌아오지 않으면 서명 지문(SHA-1) 등록을 확인하세요. (' + m.slice(17) + ')');
+      }
+      open('start', '로그인하지 못했습니다 — ' + m);
+    }
   }
   const script = src => new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.async = true; s.onload = ok; s.onerror = () => no(new Error('sdk-load-failed')); document.head.appendChild(s); });
   /* 구글 — **계정 고르는 창을 직접 띄운다.**
@@ -236,8 +244,16 @@ window.Auth = (() => {
     /* scopes 를 넘기지 않는다. 안드로이드는 scopes 가 있으면 **MainActivity 를 고치라고 거절한다**
        ("You CANNOT use scopes without modifying the main activity") — 실기기에서 그 말로 막혔다.
        기본값에 이미 email·profile·openid 가 들어 있고, 우리가 쓰는 건 ID 토큰의 email 하나다. */
+    /* 취소를 **조용히 넘기지 않는다.** 안드로이드의 Credential Manager 는 서명 지문(SHA-1)이나
+       클라이언트 ID 가 어긋나도 계정을 고른 뒤 USER_CANCELLED 로 끝낸다 — 플러그인 문서에 그렇게 적혀 있고,
+       실제로 「계정까지 골랐는데 아무 일도 안 일어남」으로 나타났다(2026-10-15).
+       그래서 취소도 화면에 적고, 원문을 함께 남긴다. 아무 말 없는 실패가 제일 고치기 어렵다. */
     try { res = await native().login({ provider, options: {} }); }
-    catch (e) { throw new Error(/cancel/i.test(String(e?.message || e)) ? 'cancelled' : String(e?.message || e)); }
+    catch (e) {
+      const raw = String(e?.message || e || '');
+      if (/cancel/i.test(raw)) throw new Error('cancelled-native:' + raw.slice(0, 60));
+      throw new Error(raw.slice(0, 90));
+    }
     const token = res?.result?.idToken;
     if (!token) throw new Error('no-id-token');
     return token;

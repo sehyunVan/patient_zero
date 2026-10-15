@@ -82,7 +82,31 @@ for (const [key, value] of [['UIRequiresFullScreen', '<true/>'], ['UIStatusBarHi
 }
 
 fs.writeFileSync(PLIST, plist);
-console.log('Info.plist 에 넣었다:\n  ' + had.join('\n  '));
+
+/* ④ 서명 팀 — **project.pbxproj 에 박아 둔다.**
+   Xcode 에서 고른 팀도 결국 이 파일에 적히는데, 버전을 올리느라 같은 파일을 커밋하면
+   맥이 `git pull` 하는 순간 날아간다. 그러면 **화면에는 팀이 보이는데 빌드만 「팀이 없다」**고 한다
+   (Signing for "App" requires a development team) — 막차 이후에서 한 번 당한 자리다(SHIPPING.md §4).
+   Debug·Release 양쪽에 박고, 자동 서명으로 고정한다. */
+const TEAM = 'FN9DUHVG65';
+const PBX = path.join(ROOT, 'mobile/ios/App/App.xcodeproj/project.pbxproj');
+if (fs.existsSync(PBX)) {
+  const before = fs.readFileSync(PBX, 'utf8');
+  /* **블록 단위로** 고친다. 줄 단위로 하면 이미 팀이 있는 설정에 한 줄을 더 넣어
+     DEVELOPMENT_TEAM 이 두 번 적힌다(처음에 그렇게 썼다가 중복이 났다). */
+  let count = 0;
+  const pbx = before.replace(/buildSettings = \{[\s\S]*?\n(\s*)\};/g, block => {
+    if (!/PRODUCT_BUNDLE_IDENTIFIER/.test(block)) return block;          // 앱 타깃의 설정만
+    count++;
+    if (/DEVELOPMENT_TEAM/.test(block)) return block.replace(/DEVELOPMENT_TEAM = "?[A-Z0-9]*"?;/, `DEVELOPMENT_TEAM = ${TEAM};`);
+    return block.replace(/(\n(\s*)PRODUCT_BUNDLE_IDENTIFIER = [^;]+;)/, (m, line, indent) =>
+      `${line}\n${indent}DEVELOPMENT_TEAM = ${TEAM};`);
+  }).replace(/CODE_SIGN_STYLE = Manual;/g, 'CODE_SIGN_STYLE = Automatic;');
+  if (pbx !== before) { fs.writeFileSync(PBX, pbx); had.push(`DEVELOPMENT_TEAM=${TEAM} · 빌드 설정 ${count}곳`); }
+  else had.push(`DEVELOPMENT_TEAM(이미 ${TEAM} · ${count}곳)`);
+} else had.push('project.pbxproj 없음 — cap add ios 먼저');
+
+console.log('넣었다:\n  ' + had.join('\n  '));
 console.log('\n역순 URL 스킴: ' + REVERSED);
 console.log('\nXcode 에서 아직 사람이 해야 하는 것(스크립트가 못 한다):');
 console.log('  · Signing & Capabilities → Team 선택, Bundle ID ' + BUNDLE);
