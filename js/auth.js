@@ -233,7 +233,10 @@ window.Auth = (() => {
   async function nativeToken(provider) {
     await nativeInit();
     let res;
-    try { res = await native().login({ provider, options: provider === 'google' ? { scopes: ['email'] } : { scopes: ['email'] } }); }
+    /* scopes 를 넘기지 않는다. 안드로이드는 scopes 가 있으면 **MainActivity 를 고치라고 거절한다**
+       ("You CANNOT use scopes without modifying the main activity") — 실기기에서 그 말로 막혔다.
+       기본값에 이미 email·profile·openid 가 들어 있고, 우리가 쓰는 건 ID 토큰의 email 하나다. */
+    try { res = await native().login({ provider, options: {} }); }
     catch (e) { throw new Error(/cancel/i.test(String(e?.message || e)) ? 'cancelled' : String(e?.message || e)); }
     const token = res?.result?.idToken;
     if (!token) throw new Error('no-id-token');

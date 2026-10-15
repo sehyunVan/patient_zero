@@ -140,6 +140,8 @@ Apple 콘솔의 Identifiers 목록에서 세 앱이 나란히 보이고, 심사 
 - 안드로이드에서 **웹** 클라이언트 ID 를 넘기는 게 급소다. 안드로이드 클라이언트 ID 로는 ID 토큰이 안 나온다.
   그 대신 콘솔에 **패키지명 + 서명 지문**이 등록돼 있어야 한다(디버그·업로드·Play 재서명 셋이 다르다).
 - 플러그인이 없으면 단추를 **꺼 둔다** — 눌리는데 안 되는 단추보다 낫다. 화면에 「앱에서는 준비 중」.
+- **안드로이드 구글에는 `scopes` 를 넘기지 않는다.** 넘기면 플러그인이 「MainActivity 를 고치라」며 거절한다.
+  기본값에 이미 email·profile·openid 가 있고, 우리가 쓰는 건 ID 토큰의 email 하나다.
 - **iOS 애플에는 `redirectUrl` 을 넘기지 않는다.** 넘기면 플러그인이 네이티브로 토큰을 받은 뒤
   그 주소로 POST 해서 **3xx 리디렉트를 기다린다** — 우리 `/api/auth/apple` 은 웹 팝업용이라 200 HTML 이고,
   그래서 「Invalid response code: 200」으로 끝났다(실기기에서 잡았다). 안 넘기면 토큰을 그대로 돌려준다.
@@ -266,7 +268,7 @@ mobile/android/              가로 고정(sensorLandscape) · 아이콘 5크기
 
 | | 값 |
 |---|---|
-| versionCode / versionName | `26101502` / `1.0.1015b` (26101501 은 이미 올렸다 — **같은 번호는 두 번 못 쓴다**) |
+| versionCode / versionName | `26101503` / `1.0.1015b` — **같은 번호는 두 번 못 쓴다**(`npm run aab -- --bump`) |
 | 업로드 키 | `C:/Users/sehyu/keys/patientzero-upload.jks` (별칭 `patientzero`) — **저장소 밖** |
 | 업로드 키 SHA-1 | `49:56:3C:9A:22:C5:1A:73:A7:BB:12:D0:D3:B6:2A:90:12:B4:1C:8C` ← 구글 OAuth 콘솔에 넣는다 |
 | 번들에 박힌 서버 주소 | `https://home.165-227-196-68.sslip.io/patient-zero` |

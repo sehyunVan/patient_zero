@@ -30,8 +30,8 @@ function run(cmd, args, cwd, shell = false) {
 if (process.argv.includes('--bump')) {
   const g = path.join(ANDROID, 'app/build.gradle');
   const src = fs.readFileSync(g, 'utf8');
-  const cur = Number(src.match(/versionCode (d+)/)[1]);
-  fs.writeFileSync(g, src.replace(/versionCode d+/, 'versionCode ' + (cur + 1)));
+  const cur = Number(src.match(/versionCode (\d+)/)[1]);
+  fs.writeFileSync(g, src.replace(/versionCode \d+/, 'versionCode ' + (cur + 1)));
   console.log('versionCode ' + cur + ' → ' + (cur + 1));
 }
 
