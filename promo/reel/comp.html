@@ -105,7 +105,7 @@ const E = {
 const lcg = s => () => (s = (s*1664525+1013904223)>>>0, s/4294967296);
 /* 로지스틱 — 유행이 실제로 그리는 S자. 조용하다가 터지고 다시 잦아든다. */
 const CURVE = (() => {
-  const K = 9.5, C = 0.56, f = x => 1/(1+Math.exp(-K*(x-C)));
+  const K = 8, C = 0.62, f = x => 1/(1+Math.exp(-K*(x-C)));
   const a = f(0), b = f(1);
   return u => clamp((f(u)-a)/(b-a));
 })();
@@ -157,7 +157,7 @@ function load(src) {
    ============================================================ */
 const FIELD = (() => {
   const rnd = lcg(20261015);
-  const COLS = 84, ROWS = 48, PAD = 0.24;              /* 화면보다 넉넉히 넓게 깐다 */
+  const COLS = 152, ROWS = 86, PAD = 0.24;             /* 화면보다 넉넉히 넓게 깐다 (≈19px 간격) */
   const P = [];
   for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++) {
     const jx = (rnd()-.5)*0.92, jy = (rnd()-.5)*0.92;
@@ -168,7 +168,7 @@ const FIELD = (() => {
     });
   }
   /* 이웃 찾기용 격자 */
-  const CELL = 70, gw = Math.ceil(W*2/CELL), gh = Math.ceil(H*2/CELL), OX = W*.5, OY = H*.5;
+  const CELL = 40, gw = Math.ceil(W*2/CELL), gh = Math.ceil(H*2/CELL), OX = W*.5, OY = H*.5;
   const grid = new Map();
   const key = (gx,gy) => gy*gw+gx;
   P.forEach((p,i) => {
@@ -201,7 +201,7 @@ const FIELD = (() => {
   let seed = 0, best = 1e9;
   P.forEach((p,i) => { const d=(p.x-W/2)**2+(p.y-H/2)**2; if (d<best) { best=d; seed=i; } });
   push({ t:0, i:seed, by:-1 });
-  const R = 76, SPEED = 1400;
+  const R = 34, SPEED = 640;
   let maxT = 0;
   while (heap.length) {
     const e = pop();
@@ -219,8 +219,26 @@ const FIELD = (() => {
   const times = order.map(i=>P[i].t);
   const countAt = u => { let lo=0, hi=times.length;
     while (lo<hi) { const m=(lo+hi)>>1; if (times[m] <= u) lo=m+1; else hi=m; } return lo; };
-  return { P, order, countAt, N:P.length };
+  /* 시간이 아니라 '몇 명이 옮았나'로 몰아야 곡선대로 보인다 —
+     물결은 둥글게 퍼지는데 모서리 사람들이 제일 늦어서, 시간으로 몰면 중간에 다 끝나 버린다. */
+  const timeAtFrac = q => times[clamp(Math.round(q*(times.length-1)), 0, times.length-1)];
+  return { P, order, countAt, timeAtFrac, N:P.length };
 })();
+
+/* 그림에서 '실제로 칠해진 칸'을 잰다 — 로고 둘레의 빈 여백을 빼기 위해 */
+let LOGOBOX = null;
+function alphaBox(im) {
+  const S = 420, sc = S/Math.max(im.width, im.height);
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(im.width*sc)); c.height = Math.max(1, Math.round(im.height*sc));
+  const g = c.getContext('2d'); g.drawImage(im, 0, 0, c.width, c.height);
+  const d = g.getImageData(0,0,c.width,c.height).data;
+  let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+  for (let y=0;y<c.height;y++) for (let x=0;x<c.width;x++)
+    if (d[(y*c.width+x)*4+3] > 24) { if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; }
+  if (x1 < x0) return { x:0, y:0, w:1, h:1 };
+  return { x:x0/c.width, y:y0/c.height, w:(x1-x0+1)/c.width, h:(y1-y0+1)/c.height };
+}
 
 /* 글자 꼴을 점으로 — S3 에서 가루가 글자로 모인다 */
 function samplePoints(draw, step = 7, cap = 2000) {
@@ -419,13 +437,15 @@ const T = { s1:[0,2.0], s2:[2.0,4.5], s3:[4.5,6.0], s4:[6.0,8.0], s5:[8.0,10.0],
 function drawField(g, u, o = {}) {
   const { dim = 1, edges = 1, warp = null, dotScale = 1, susp = 1 } = o;
   const P = FIELD.P;
-  /* 아직 안 옮은 사람 */
+  /* 만 이천 개를 매 프레임 그린다 — arc 는 비싸서 작은 점은 네모로 찍는다.
+     그래도 둥글게 보이고, 프레임당 수십 밀리초가 줄어든다. */
   if (susp > 0) {
-    g.save(); g.fillStyle = rgba(132,154,186, .46*susp*dim);
+    g.save(); g.fillStyle = rgba(122,144,178, .52*susp*dim);
+    const s = 1.9*dotScale, h = s/2;
     for (let i=0;i<P.length;i++) {
       const p = P[i]; if (p.t <= u) continue;
       const w = warp ? warp(p,i) : p;
-      g.beginPath(); g.arc(w.x, w.y, 1.15*dotScale, 0, TAU); g.fill();
+      g.fillRect(w.x-h, w.y-h, s, s);
     }
     g.restore();
   }
@@ -444,21 +464,28 @@ function drawField(g, u, o = {}) {
     }
     g.restore();
   }
-  /* 옮은 사람 + 터지는 고리 */
+  /* 옮은 사람 — 오래된 것은 한 색으로 몰아 한 번에, 갓 옮은 것만 따로 */
   g.save();
+  g.fillStyle = rgba(228, 40, 60, .94*dim);
+  const s = 2.7*dotScale, h = s/2;
   for (let i=0;i<P.length;i++) {
     const p = P[i]; if (p.t > u) continue;
-    const age = u - p.t;
+    if (u - p.t < .34) continue;
+    const w = warp ? warp(p,i) : p;
+    g.fillRect(w.x-h, w.y-h, s, s);
+  }
+  /* 갓 옮은 것 — 밝게 번쩍하고 고리가 퍼진다 */
+  for (let i=0;i<P.length;i++) {
+    const p = P[i]; const age = u - p.t;
+    if (age < 0 || age >= .34) continue;
     const w = warp ? warp(p,i) : p;
     const pop = Math.exp(-age*26);
-    const r = (1.7 + pop*2.6) * dotScale;
-    g.fillStyle = rgba(255, 46+pop*150, 64+pop*120, (.72+pop*.28)*dim);
+    const r = (1.5 + pop*3.0) * dotScale;
+    g.fillStyle = rgba(255, 58+pop*150, 78+pop*120, (.82+pop*.18)*dim);
     g.beginPath(); g.arc(w.x, w.y, r, 0, TAU); g.fill();
-    if (age < .34) {
-      const k = E.out4(age/.34);
-      g.strokeStyle = rgba(255,60,80,(1-k)*.5*dim); g.lineWidth = 1.6*(1-k)+.4;
-      g.beginPath(); g.arc(w.x, w.y, (2+k*26)*dotScale, 0, TAU); g.stroke();
-    }
+    const k = E.out4(age/.34);
+    g.strokeStyle = rgba(255,60,80,(1-k)*.42*dim); g.lineWidth = 1.5*(1-k)+.35;
+    g.beginPath(); g.arc(w.x, w.y, (2+k*22)*dotScale, 0, TAU); g.stroke();
   }
   g.restore();
 }
@@ -530,7 +557,7 @@ function s2(t) {
   /* 카메라 — 천천히 밀고 들어간다 */
   const push = lerp(1.0, 1.15, E.io(u));
   bx.save(); bx.translate(W/2,H/2); bx.scale(push,push); bx.translate(-W/2,-H/2);
-  const p = CURVE(u);                                  /* 느리게 → 터지고 → 포화. 진짜 유행 곡선 */
+  const p = FIELD.timeAtFrac(CURVE(u));                /* 느리게 → 터지고 → 포화. 진짜 유행 곡선 */
   drawField(bx, p, { dim:1 });
   bx.restore();
 
@@ -571,7 +598,7 @@ function buildWord() {
   WORDPTS = samplePoints(draw, 9, 1700);
   /* 가장 가까운 알갱이를 붙인다 — 적게 움직일수록 자연스럽다 */
   const used = new Uint8Array(FIELD.N);
-  const cand = FIELD.order.slice(0, Math.min(FIELD.N, WORDPTS.length*4));
+  const cand = FIELD.order;
   ASSIGN = WORDPTS.map(tp => {
     let best = -1, bd = 1e18;
     for (let k=0;k<cand.length;k+=1) {
@@ -606,12 +633,10 @@ function s3(t) {
   bx.globalAlpha = 1;
   const P = FIELD.P;
   bx.save();
-  for (let i=0;i<P.length;i++) {
-    const p = P[i];
-    if (has[i]) continue;
-    const a = (1-fadeRest) * (p.t<=1 ? .55 : .2);
-    if (a <= .01) continue;
-    bx.fillStyle = rgba(255,54,74,a*.5); bx.beginPath(); bx.arc(p.x,p.y,1.6,0,TAU); bx.fill();
+  const restA = (1-fadeRest) * .28;
+  if (restA > .01) {
+    bx.fillStyle = rgba(255,54,74,restA);
+    for (let i=0;i<P.length;i++) { if (has[i]) continue; const p = P[i]; bx.fillRect(p.x-1,p.y-1,2.1,2.1); }
   }
   bx.restore();
   /* 알갱이가 굳어 진짜 글자가 된다 — 글자를 먼저 깔고 알갱이를 그 위에 얹어야
@@ -1132,15 +1157,17 @@ function s10(t) {
   if (t < 18.0) {
     const k = E.in4(conv);
     const P = FIELD.P;
+    /* 만 이천 줄을 한 번에 — 점마다 stroke 하면 프레임이 안 나온다 */
     bx.save();
-    for (let i=0;i<P.length;i+=1) {
+    bx.strokeStyle = rgba(255,58,78, .5*(1-k*0.3)); bx.lineWidth = 1.4;
+    bx.beginPath();
+    const kp = Math.max(0, k-0.055);
+    for (let i=0;i<P.length;i+=2) {
       const p = P[i];
-      const x = lerp(p.x, W/2, k), y = lerp(p.y, H/2, k);
-      /* 꼬리 */
-      const px = lerp(p.x, W/2, Math.max(0,k-0.055)), py = lerp(p.y, H/2, Math.max(0,k-0.055));
-      bx.strokeStyle = rgba(255,58,78, .55*(1-k*0.3));
-      bx.lineWidth = 1.5; bx.beginPath(); bx.moveTo(px,py); bx.lineTo(x,y); bx.stroke();
+      bx.moveTo(lerp(p.x, W/2, kp), lerp(p.y, H/2, kp));
+      bx.lineTo(lerp(p.x, W/2, k),  lerp(p.y, H/2, k));
     }
+    bx.stroke();
     bx.restore();
     const r = lerp(2, 44, E.in4(conv));
     const g = bx.createRadialGradient(W/2,H/2,0,W/2,H/2,r*5);
@@ -1171,24 +1198,27 @@ function s10(t) {
   }
   bx.restore();
 
-  /* 로고 */
+  /* 로고 — 그림의 여백이 아니라 '글씨가 실제로 차지한 칸'을 기준으로 앉힌다.
+     그래야 한국어판·영어판이 같은 자리에 선다. */
+  const CY = H*0.435;
+  let visBottom = CY + 180;
   const im = IMG.logo;
-  if (im) {
+  if (im && LOGOBOX) {
     const k = E.out5(clamp(d/0.52));
-    const sc = lerp(1.13, 1.0, k) * 1.0;
-    const maxW = W*0.62, s = maxW/im.width*sc;
-    const w2 = im.width*s, h2 = im.height*s;
-    bx.save();
-    bx.globalAlpha = clamp(d/0.06);
-    bx.translate(W/2, H*0.455 + (1-k)*14);
-    bx.drawImage(im, -w2/2, -h2/2, w2, h2);
+    const b = LOGOBOX;
+    const s = (W*0.52*lerp(1.12,1.0,k)) / (im.width*b.w);
+    const dw = im.width*s, dh = im.height*s;
+    const dx = W/2 - dw*(b.x + b.w/2), dy = CY + (1-k)*12 - dh*(b.y + b.h/2);
+    bx.save(); bx.globalAlpha = clamp(d/0.05);
+    bx.drawImage(im, dx, dy, dw, dh);
     bx.restore();
+    visBottom = dy + dh*(b.y + b.h);
   }
 
   /* 밑에 가는 줄 + 한 줄 */
   const lu = E.out5(seg(t, 18.34, 18.92));
   if (lu > 0) {
-    const y = H*0.455 + (IMG.logo ? (IMG.logo.height*(W*0.62/IMG.logo.width))/2 : 180) + 42;
+    const y = visBottom + 62;
     const half = 430*lu;
     hairline(bx, W/2-half, y, W/2+half, .35);
     const ta = E.out(seg(t,18.5,19.0));
@@ -1203,7 +1233,7 @@ function s10(t) {
     const dd = t-b; if (dd<0 || dd>.8) continue;
     const k = E.out4(dd/.8);
     bx.strokeStyle = rgba(255,60,80,(1-k)*.16); bx.lineWidth = 1.2;
-    bx.beginPath(); bx.arc(W/2, H*0.455, 60+k*900, 0, TAU); bx.stroke();
+    bx.beginPath(); bx.arc(W/2, CY, 60+k*900, 0, TAU); bx.stroke();
   }
 }
 
@@ -1302,6 +1332,7 @@ function seek(t) {
     /* DOM 안의 <img> 도 다 와야 한다 */
     await Promise.all([...document.images].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
     buildWord();
+    if (IMG.logo) LOGOBOX = alphaBox(IMG.logo);
     seek(+(Q.get('t') || 0));
     REEL.seek = seek;
     REEL.ready = true;

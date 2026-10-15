@@ -212,7 +212,10 @@ cd mobile && npm run aab              # 굽기 → cap sync → bundleRelease �
   네이티브 플러그인(막차 이후가 쓴 `@capgo/capacitor-social-login`)으로 바꿔야 앱에서 열린다.
   **내부 테스트는 데모 계정(메일 고정 코드)으로 들어갈 수 있다.**
 - **Resend 키가 없어 일반 메일 로그인은 꺼져 있다.** 키를 넣으면 바로 열린다.
-- iOS 는 `npx cap add ios` 부터 — 맥에서 한다.
+- iOS 는 맥에서: `cd mobile && npx cap add ios` → `node tools/ios-setup.mjs` →
+  Xcode 에서 Team · Bundle ID · **Sign in with Apple** 체크 → Archive.
+  `ios-setup.mjs` 가 Info.plist 에 박는 것: 구글 역순 URL 스킴(로그인이 앱으로 돌아오는 길) ·
+  가로 전용 · 전체 화면 · 상태 표시줄 숨김. 손으로 하면 **URL Types 를 제일 자주 빠뜨린다.**
 
 ---|---|
 | versionCode / versionName | `26101501` / `1.0.1015` |
