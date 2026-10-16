@@ -189,35 +189,50 @@ gradle 래퍼 이름이 판마다 달라서(`gradlew.bat` / `gradlew`) 그 선�
 `mobile/android/app/build.gradle` 의 둘을 같이 본다:
 `versionCode`(스토어가 보는 번호, 같은 번호는 두 번 못 올린다) · `versionName`(사람이 보는 이름).
 
-### iOS (맥에서만)
+### 맥에서 처음부터 — iOS 빌드 전 과정
 
 ```bash
+# 1. 받기
 git clone https://github.com/sehyunVan/patient_zero.git
 cd patient_zero
-node tools/fetch-fonts.mjs            # 글꼴 832조각 — 저장소에 없다
+
+# 2. 저장소에 없는 것 두 가지를 만든다
+node tools/fetch-fonts.mjs        # 글꼴 832조각 11MB (용량이라 저장소에서 뺐다)
 cd mobile && npm install
-npx cap add ios                       # 처음 한 번
-cd .. && node tools/ios-setup.mjs     # Info.plist (URL 스킴 · 이름 · 가로 고정 · 전체 화면)
-node tools/ios-icons.mjs              # 앱 아이콘 1024²(알파 없음) · 스플래시 2732²
-                                      #   원화: icons/store/app-icon-1024.png (저장소에 있다)
-cd mobile && npm run pack && npx cap sync ios
-npx cap open ios                      # Xcode
+
+# 3. iOS 프로젝트 만들기 (처음 한 번)
+npx cap add ios
+
+# 4. 손으로 누르던 설정을 스크립트가 넣는다  ← Xcode 는 닫아 둔 채로
+cd ..
+node tools/ios-setup.mjs          # 장면(UIScene) · URL 스킴 · 이름 · 가로 고정 · 전체 화면 · 서명 팀
+node tools/ios-icons.mjs          # 앱 아이콘 1024²(알파 없음) · 스플래시 2732²
+
+# 5. 웹 번들을 굽고 담는다
+cd mobile
+npm run pack                      # dist/mobile 을 다시 굽는다(점검까지 한다)
+npx cap sync ios                  # 번들 + 플러그인 통합
+
+# 6. 열기
+npx cap open ios
 ```
 
-**「Signing for "App" requires a development team」이 뜨면** — 화면에는 팀이 보이는데 빌드만 그렇게 말한다.
-팀은 `project.pbxproj` 에 적히는데, 버전을 올리느라 그 파일을 커밋하면 맥이 `git pull` 하는 순간 날아간다.
-`node tools/ios-setup.mjs` 가 Debug·Release 양쪽에 팀(`FN9DUHVG65`)을 다시 박는다. 돌린 뒤 Xcode 를 닫았다 연다.
-**Xcode 를 열어 둔 채 `git pull` 하지 않는다** — 메모리의 옛 값이 그 파일을 되덮어쓴다(SHIPPING.md §4).
-
-Xcode 에서 **사람이 해야 하는 것** (스크립트가 끝나면 다시 알려 준다):
+**Xcode 에서 사람이 할 것** (스크립트가 끝나며 다시 알려 준다)
 
 | 자리 | 할 일 |
 |---|---|
-| Signing & Capabilities | Bundle ID `sarl.patientzero.app` 확인 (Team 은 `ios-setup.mjs` 가 박는다) |
-| ＋ Capability | **Sign in with Apple** — 없으면 iOS 애플 로그인이 아예 안 뜬다 |
-| Edit Scheme → Run → Options | StoreKit Configuration = **None** (안 그러면 결제가 가짜 거래가 된다) |
+| TARGETS App → Signing & Capabilities | Bundle ID `sarl.patientzero.app` 확인. Team 은 스크립트가 박아 두었다 |
+| 같은 화면의 ＋ Capability | **Sign in with Apple** |
+| TARGETS App → General | **Build** 번호를 올린다 (`1.0 (1)` 은 이미 썼다 → `2`) |
+| Product → Scheme → Edit Scheme → Run → Options | StoreKit Configuration = **None** |
 
-그다음 `Product → Destination → Any iOS Device → Archive → Distribute App`.
+그다음 `Product → Destination → Any iOS Device` → `Product → Archive` → `Distribute App`.
+
+**올리기 전에 TestFlight 내부 테스트로 한 번 받아 연다.** 심사자가 도는 것과 **같은 바이너리**라,
+거기서 열리면 2.1(a) 는 넘긴 것이다. Xcode 의 Run(디버그)은 다른 빌드라 이 확인을 대신하지 못한다.
+
+**두 번째부터는 1·3번을 건너뛴다**(4번부터). `git pull` 뒤에는 **반드시 `node tools/ios-setup.mjs`** 를
+다시 돌린다 — 서명 팀은 `project.pbxproj` 에 적히는데 그 파일이 pull 로 되덮어써질 수 있다.
 
 ### 두 판 공통
 

@@ -24,3 +24,4 @@ site/play/
 # 하위 폴더(promo/v1 …)까지 — 영상은 한 장도 넣지 않는다
 *.mp4
 mobile/android/app/release/
+crashlog-*.ips

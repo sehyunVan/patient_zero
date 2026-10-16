@@ -81,6 +81,84 @@ for (const [key, value] of [['UIRequiresFullScreen', '<true/>'], ['UIStatusBarHi
   had.push(key);
 }
 
+/* ③-2 UIScene 생명주기 — **iOS 26/27 에서는 이게 없으면 실행 순간 죽는다.**
+   2026-10-15 심사 반려(2.1a)의 정체였다. 크래시 로그 맨 위가
+   `_UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption_block_` 였다 —
+   UIKit 이 「장면(scene)을 안 쓰는 앱」을 보고 직접 트랩을 건다(EXC_BREAKPOINT).
+   Capacitor 기본 템플릿은 아직 AppDelegate 만 쓰므로 여기서 채워 넣는다.
+
+   SceneDelegate 를 **AppDelegate.swift 안에** 적는다. 파일을 새로 만들면 Xcode 프로젝트(pbxproj)의
+   소스 목록에도 등록해야 하는데, 그 파일을 손으로 고치다 깨뜨리는 것이 더 위험하다.
+   Swift 는 한 파일에 여러 클래스를 둘 수 있으니 이 편이 안전하다.
+
+   URL 콜백도 같이 옮긴다 — 장면을 쓰면 `application(_:open:)` 대신 `scene(_:openURLContexts:)` 로 온다.
+   구글 로그인이 돌아오는 길이 거기라, 안 옮기면 **로그인만 조용히 안 된다.** */
+const APPDELEGATE = path.join(ROOT, 'mobile/ios/App/App/AppDelegate.swift');
+if (fs.existsSync(APPDELEGATE)) {
+  let swift = fs.readFileSync(APPDELEGATE, 'utf8');
+  if (swift.includes('class SceneDelegate')) had.push('SceneDelegate(이미 있음)');
+  else {
+    if (!/^import Capacitor$/m.test(swift)) swift = swift.replace(/^import UIKit$/m, 'import UIKit\nimport Capacitor');
+    swift += `
+
+// ── iOS 26+ 의 장면 생명주기 ──────────────────────────────────────────
+// tools/ios-setup.mjs 가 넣는다. 없으면 iOS 27 에서 **실행 순간 죽는다**(2.1a 반려의 원인).
+// Info.plist 의 UIApplicationSceneManifest 가 이 클래스를 가리킨다.
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+    var window: UIWindow?
+
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+        guard let windowScene = scene as? UIWindowScene else { return }
+        let window = UIWindow(windowScene: windowScene)
+        window.rootViewController = UIStoryboard(name: "Main", bundle: nil).instantiateInitialViewController()
+        self.window = window
+        window.makeKeyAndVisible()
+        // 앱이 꺼져 있을 때 열린 주소도 흘려보내지 않는다
+        for context in connectionOptions.urlContexts {
+            _ = ApplicationDelegateProxy.shared.application(UIApplication.shared, open: context.url, options: [:])
+        }
+    }
+
+    // 로그인 창이 돌아오는 길 — 장면을 쓰면 AppDelegate 가 아니라 여기로 온다
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        guard let url = URLContexts.first?.url else { return }
+        _ = ApplicationDelegateProxy.shared.application(UIApplication.shared, open: url, options: [:])
+    }
+
+    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+        _ = ApplicationDelegateProxy.shared.application(UIApplication.shared, continue: userActivity, restorationHandler: { _ in })
+    }
+}
+`;
+    fs.writeFileSync(APPDELEGATE, swift);
+    had.push('SceneDelegate(AppDelegate.swift 에 넣음)');
+  }
+} else had.push('AppDelegate.swift 없음 — cap add ios 먼저');
+
+/* ③-3 Info.plist 의 장면 선언 */
+if (plist.includes('UIApplicationSceneManifest')) had.push('UIApplicationSceneManifest(이미 있음)');
+else {
+  const manifest = `	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneConfigurationName</key>
+					<string>Default Configuration</string>
+					<key>UISceneDelegateClassName</key>
+					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+`;
+  plist = plist.replace(/\n<\/dict>\n<\/plist>/, '\n' + manifest + '</dict>\n</plist>');
+  had.push('UIApplicationSceneManifest(넣음)');
+}
 fs.writeFileSync(PLIST, plist);
 
 /* ④ 서명 팀 — **project.pbxproj 에 박아 둔다.**
