@@ -184,9 +184,54 @@ if (fs.existsSync(PBX)) {
   else had.push(`DEVELOPMENT_TEAM(이미 ${TEAM} · ${count}곳)`);
 } else had.push('project.pbxproj 없음 — cap add ios 먼저');
 
+/* ⑤ 빌드 번호 — Xcode 의 General → Identity → Build 와 **같은 값**이다(pbxproj 의 CURRENT_PROJECT_VERSION).
+   반려 뒤 다시 낼 때는 Version 은 그대로 두고 이 번호만 올린다 — 같은 번호는 두 번 안 받는다.
+     node tools/ios-setup.mjs --build 2      (생략하면 1 올린다) */
+if (fs.existsSync(PBX)) {
+  const src = fs.readFileSync(PBX, 'utf8');
+  const at = process.argv.indexOf('--build');
+  const want = at >= 0 ? Number(process.argv[at + 1]) : null;
+  const cur = Number((src.match(/CURRENT_PROJECT_VERSION = (\d+);/) || [])[1] || 1);
+  const next = want || cur + 1;
+  let out = src.replace(/CURRENT_PROJECT_VERSION = \d+;/g, `CURRENT_PROJECT_VERSION = ${next};`);
+  if (!/CURRENT_PROJECT_VERSION/.test(src)) {
+    out = out.replace(/(\n(\s*)PRODUCT_BUNDLE_IDENTIFIER = [^;]+;)/g, (m, line, indent) =>
+      `${line}\n${indent}CURRENT_PROJECT_VERSION = ${next};\n${indent}MARKETING_VERSION = 1.0;`);
+  }
+  fs.writeFileSync(PBX, out);
+  had.push(`빌드 번호 ${cur} → ${next}`);
+}
+
+/* ⑥ Sign in with Apple — Xcode 의 ＋ Capability 와 같은 일을 파일로 한다.
+   권한 파일 하나와 그걸 가리키는 빌드 설정 한 줄이면 된다(그 파일은 프로젝트 목록에 없어도 서명에 쓰인다).
+   **없으면 iOS 애플 로그인이 아예 안 뜬다.** */
+const ENT = path.join(ROOT, 'mobile/ios/App/App/App.entitlements');
+if (!fs.existsSync(ENT)) {
+  fs.writeFileSync(ENT, `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
+</dict>
+</plist>
+`);
+  had.push('App.entitlements(Sign in with Apple)');
+} else had.push('App.entitlements(이미 있음)');
+if (fs.existsSync(PBX)) {
+  const src = fs.readFileSync(PBX, 'utf8');
+  if (!/CODE_SIGN_ENTITLEMENTS/.test(src)) {
+    fs.writeFileSync(PBX, src.replace(/(\n(\s*)PRODUCT_BUNDLE_IDENTIFIER = [^;]+;)/g, (m, line, indent) =>
+      `${line}\n${indent}CODE_SIGN_ENTITLEMENTS = App/App.entitlements;`));
+    had.push('CODE_SIGN_ENTITLEMENTS');
+  }
+}
+
 console.log('넣었다:\n  ' + had.join('\n  '));
 console.log('\n역순 URL 스킴: ' + REVERSED);
 console.log('\nXcode 에서 아직 사람이 해야 하는 것(스크립트가 못 한다):');
-console.log('  · Signing & Capabilities → Team 선택, Bundle ID ' + BUNDLE);
-console.log('  · ＋ Capability → Sign in with Apple   ← 없으면 애플 로그인이 아예 안 뜬다');
+console.log('  · Signing & Capabilities 에서 Bundle ID 가 ' + BUNDLE + ' 인지만 확인(Team·권한은 위에서 넣었다)');
+
 console.log('  · Edit Scheme → Run → Options → StoreKit Configuration = None');

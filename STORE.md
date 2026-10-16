@@ -205,7 +205,8 @@ npx cap add ios
 
 # 4. 손으로 누르던 설정을 스크립트가 넣는다  ← Xcode 는 닫아 둔 채로
 cd ..
-node tools/ios-setup.mjs          # 장면(UIScene) · URL 스킴 · 이름 · 가로 고정 · 전체 화면 · 서명 팀
+node tools/ios-setup.mjs --build 2   # 장면(UIScene) · URL 스킴 · 이름 · 가로 고정 · 전체 화면
+                                  #   + 서명 팀 · Sign in with Apple 권한 · 빌드 번호(생략하면 1 올림)
 node tools/ios-icons.mjs          # 앱 아이콘 1024²(알파 없음) · 스플래시 2732²
 
 # 5. 웹 번들을 굽고 담는다
@@ -221,10 +222,10 @@ npx cap open ios
 
 | 자리 | 할 일 |
 |---|---|
-| TARGETS App → Signing & Capabilities | Bundle ID `sarl.patientzero.app` 확인. Team 은 스크립트가 박아 두었다 |
-| 같은 화면의 ＋ Capability | **Sign in with Apple** |
-| TARGETS App → General | **Build** 번호를 올린다 (`1.0 (1)` 은 이미 썼다 → `2`) |
-| Product → Scheme → Edit Scheme → Run → Options | StoreKit Configuration = **None** |
+| Product → Scheme → Edit Scheme → Run → Options | StoreKit Configuration = **None** (결제를 붙인 뒤에만 의미가 있다) |
+
+팀 · Sign in with Apple 권한 · 빌드 번호는 `ios-setup.mjs` 가 넣는다 — **Xcode 화면에서 찾을 필요가 없다.**
+확인하고 싶으면 왼쪽 맨 위 파란 **App** 아이콘 → 편집기 왼쪽의 **TARGETS → App** → General·Signing 탭이다.
 
 그다음 `Product → Destination → Any iOS Device` → `Product → Archive` → `Distribute App`.
 
