@@ -74,7 +74,7 @@ for (const key of ['UISupportedInterfaceOrientations', 'UISupportedInterfaceOrie
 }
 
 /* ③ 전체 화면 · 상태 표시줄 */
-for (const [key, value] of [['UIRequiresFullScreen', '<true/>'], ['UIStatusBarHidden', '<true/>'], ['UIViewControllerBasedStatusBarAppearance', '<false/>']]) {
+for (const [key, value] of [['UIRequiresFullScreen', '<true/>'], ['UIStatusBarHidden', '<true/>'], ['UIViewControllerBasedStatusBarAppearance', '<false/>'], ['ITSAppUsesNonExemptEncryption', '<false/>']]) {
   const re = new RegExp('<key>' + key + '</key>\\s*\\n\\s*<(true|false)/>');
   if (re.test(plist)) plist = plist.replace(re, `<key>${key}</key>\n	${value}`);
   else plist = plist.replace(/\n<\/dict>\n<\/plist>/, `\n	<key>${key}</key>\n	${value}\n</dict>\n</plist>`);

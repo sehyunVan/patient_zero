@@ -229,6 +229,41 @@ npx cap open ios
 
 그다음 `Product → Destination → Any iOS Device` → `Product → Archive` → `Distribute App`.
 
+### 고친 뒤 확인하는 세 가지 길
+
+이 크래시는 **iOS 26 이상에서만** 난다. 그러니 그 버전이 있는 곳에서만 재현된다.
+
+**① 시뮬레이터 (제일 빠르다 · 기기 필요 없음)**
+
+```
+npx cap open ios
+Xcode 위쪽 기기 고르는 칸 → iPhone 17 Pro (iOS 27) 같은 시뮬레이터 선택 → ▶ Run
+```
+없으면 Xcode → Settings → **Components** 에서 iOS 27 시뮬레이터를 받는다.
+이 크래시는 UIKit 이 거는 트랩이라 **디버그 실행에서도 그대로 재현된다** — 열리면 고쳐진 것이다.
+
+**② 케이블로 자기 폰에 (폰이 iOS 26 이상일 때)**
+
+```
+폰을 케이블로 연결 → 기기 칸에서 그 폰 선택 → ▶ Run
+```
+처음이면 폰에서 **설정 → 일반 → VPN 및 기기 관리**에서 개발자를 신뢰해 줘야 한다.
+
+**③ TestFlight (심사자가 도는 것과 같은 바이너리)**
+
+```
+Xcode: Product → Archive → Distribute App → TestFlight & App Store → Upload
+App Store Connect → TestFlight 탭에서 처리 끝날 때까지 기다린다(보통 5~15분)
+→ 내부 테스트(Internal Testing) 그룹에 자기 계정을 넣고 그 빌드를 추가
+폰: App Store 에서 **TestFlight** 앱을 깔고 같은 Apple ID 로 로그인 → 목록에 뜬다 → 설치
+```
+
+내부 테스트는 **심사 없이** 바로 깔린다(외부 테스트만 심사를 거친다).
+수출 규정(암호화) 질문은 `ITSAppUsesNonExemptEncryption=false` 를 넣어 두었으니 다시 묻지 않는다.
+
+> ①로 열리는 것을 보고 제출하고, ③은 제출과 함께 돌려 두면 된다 —
+> 어차피 업로드한 빌드가 TestFlight 에도 같이 올라간다.
+
 **올리기 전에 TestFlight 내부 테스트로 한 번 받아 연다.** 심사자가 도는 것과 **같은 바이너리**라,
 거기서 열리면 2.1(a) 는 넘긴 것이다. Xcode 의 Run(디버그)은 다른 빌드라 이 확인을 대신하지 못한다.
 
