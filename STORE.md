@@ -227,6 +227,44 @@ Xcode 에서 **사람이 해야 하는 것** (스크립트가 끝나면 다시 �
 
 ---
 
+## 2.1(a) 실행 즉시 크래시 — 2026-10-15 반려
+
+```
+Submission ea627057-7ae2-4aca-857d-7273ed6194e1 · iPhone 17 Pro Max · iOS 27.0
+Version reviewed: 1.0 (1)      ← 기본값 그대로다. 버전을 안 올리고 올린 빌드다
+"We were unable to review the app because it crashed on launch."
+```
+
+**이건 기능 반려가 아니다.** 심사자가 연 순간 죽었다는 뜻이고, 고치는 길은 **크래시 로그 한 조각**에서 시작한다.
+App Store Connect 의 그 메시지에 로그가 붙어 있다 — 받아서 **Exception Type** 과 **Thread 0 의 맨 위 몇 줄**을 본다.
+
+| 로그에 보이는 것 | 뜻 | 고치는 자리 |
+|---|---|---|
+| `dyld: Library not loaded` / `Reason: image not found` | 플러그인 프레임워크가 안 실렸다 | SPM·Pods 통합. 특히 **`cap add ios` 뒤에 플러그인을 더 깔았으면** `npx cap sync ios` 를 다시 돌려야 붙는다 |
+| `EXC_BREAKPOINT` + Swift `fatalError` | Capacitor 가 웹 번들을 못 찾았다 | `npm run pack` 없이 Archive 했을 때. `ios/App/App/public/index.html` 이 있는지 본다 |
+| `NSInvalidArgumentException` + plist 키 이름 | Info.plist 값이 어긋났다 | `node tools/ios-setup.mjs` 를 다시 돌리고 Xcode 를 닫았다 연다 |
+| `EXC_CRASH (SIGKILL)` + `0x8badf00d` | 실행이 너무 느려 OS 가 죽였다(워치독) | 번들 26MB·글꼴 833조각을 **첫 화면에서 전부 읽지 않는지** 본다 |
+
+### 심사자와 같은 빌드로 재현하는 법
+
+Xcode 의 Run(디버그)은 **다른 빌드**다. 심사자가 돈 건 Archive 한 배포 빌드이므로, 그걸 그대로 받아야 한다:
+
+1. Archive → **TestFlight 내부 테스트**에 올린다(심사 제출과 같은 바이너리다).
+2. 자기 폰에서 TestFlight 로 받아 연다. 여기서 죽으면 그 자리에서 잡을 수 있다.
+3. 죽은 뒤 **설정 → 개인정보 보호 → 분석 → 분석 데이터**에서 `PATIENT ZERO` 로그를 찾아 읽는다.
+
+Run(디버그)에서만 되고 TestFlight 에서 죽는다면 거의 **링크·자원 문제**다 — 디버그는 SPM 이 로컬에서 풀리고
+자원도 느슨하게 들어가지만, 배포 빌드는 그렇지 않다.
+
+### 다시 올리기 전에 반드시
+
+- **버전을 올린다.** 반려 뒤 재제출은 Version 은 그대로 두고 **Build 번호만** 올린다(`1.0 (2)`).
+  지금 올라간 것이 `1.0 (1)` 이라 같은 번호는 안 받는다.
+- `node tools/ios-setup.mjs` → `node tools/ios-icons.mjs` → `cd mobile && npm run pack && npx cap sync ios` 순서로 다시 맞춘다.
+  **`cap sync` 는 플러그인 통합도 같이 고친다** — 플러그인을 더 깐 뒤 이걸 안 돌리면 앱이 그 프레임워크 없이 뜬다.
+
+---
+
 ## 4. 사람이 해야 하는 것 — 내가 못 하는 자리
 
 순서는 SHIPPING.md §6 그대로다. **3번과 6번을 앞당기는 것**이 그 노트의 요점이다.
