@@ -248,26 +248,67 @@
     for (const f of floats) { f.life -= dt; f.y -= 27 * dt; } floats = floats.filter(f => f.life > 0);
     shake = Math.max(0, shake - dt * 30); updateHud(); if (player.hp <= 0) end('down');
   }
+  /* HUD 는 **바뀐 것만** 쓴다.
+     전에는 매 프레임 열다섯 군데에 글자·스타일을 다시 넣고 querySelectorAll 까지 돌렸다.
+     값이 같아도 쓰면 브라우저는 스타일을 다시 계산한다 — 초당 60번. 약한 기기에서 그게 쌓여
+     메인 스레드가 5초 넘게 막히면 안드로이드가 「응답하지 않음」으로 앱을 죽인다(A12, 2026-10-18). */
+  const hudWas = {};
+  let stockNodes = null;
+  const hudText = (id, value) => {
+    const v = String(value);
+    if (hudWas['t' + id] === v) return;
+    hudWas['t' + id] = v;
+    const el = $(id); if (el) el.textContent = v;
+  };
+  const hudStyle = (id, prop, value) => {
+    const k = 's' + id + prop;
+    if (hudWas[k] === value) return;
+    hudWas[k] = value;
+    const el = $(id); if (el) el.style[prop] = value;
+  };
+  const hudClass = (id, name, on) => {
+    const k = 'c' + id + name;
+    if (hudWas[k] === on) return;
+    hudWas[k] = on;
+    const el = $(id); if (el) el.classList.toggle(name, on);
+  };
+  const hudAttr = (id, name, on) => {
+    const k = 'a' + id + name;
+    if (hudWas[k] === on) return;
+    hudWas[k] = on;
+    const el = $(id); if (el) el.toggleAttribute(name, on);
+  };
   function updateHud() {
-    document.querySelectorAll('[data-stock]').forEach(el=>el.textContent=player.stock[el.dataset.stock]||0);
-    $('effect-status').textContent = [player.smoke>0 ? `은폐 ${player.smoke.toFixed(1)}s` : '',player.boost>0 ? `가속 ${player.boost.toFixed(1)}s` : ''].filter(Boolean).join(' / ');
-    $('score').textContent = String(score).padStart(3, '0'); $('combo').textContent = combo >= 2 ? `${combo} CHAIN${combo >= 3 ? ' · 체력 회복 +'+player.character.heal : ''}` : cleared ? '통과 — 남은 시간은 전부 기록' : `통과까지 ${chapter.quota - score}명`;
-    $('health').style.width = player.hp + '%'; $('health').style.background = player.hp <= 40 ? '#ff875c' : '#ed3446'; $('hp-text').textContent = player.hp + '%';
+    if (!stockNodes || !stockNodes.length || !stockNodes[0].isConnected) stockNodes = [...document.querySelectorAll('[data-stock]')];
+    for (const el of stockNodes) {
+      const v = String(player.stock[el.dataset.stock] || 0);
+      if (el.textContent !== v) el.textContent = v;
+    }
+    hudText('effect-status', [player.smoke > 0 ? `은폐 ${player.smoke.toFixed(1)}s` : '', player.boost > 0 ? `가속 ${player.boost.toFixed(1)}s` : ''].filter(Boolean).join(' / '));
+    hudText('score', String(score).padStart(3, '0'));
+    hudText('combo', combo >= 2 ? `${combo} CHAIN${combo >= 3 ? ' · 체력 회복 +' + player.character.heal : ''}` : cleared ? '통과 — 남은 시간은 전부 기록' : `통과까지 ${chapter.quota - score}명`);
+    hudStyle('health', 'width', player.hp + '%');
+    hudStyle('health', 'background', player.hp <= 40 ? '#ff875c' : '#ed3446');
+    hudText('hp-text', player.hp + '%');
     // 시간은 흐르는 게 아니라 줄어든다 — 남은 시간이 곧 남은 기회다.
     const left = Math.max(0, Math.ceil(ROUND - elapsed));
-    $('time').textContent = `${String(Math.floor(left / 60)).padStart(2, '0')}:${String(left % 60).padStart(2, '0')}`;
-    $('time').classList.toggle('urgent', left <= 10 && mode === 'playing');
+    hudText('time', `${String(Math.floor(left / 60)).padStart(2, '0')}:${String(left % 60).padStart(2, '0')}`);
+    hudClass('time', 'urgent', left <= 10 && mode === 'playing');
     // 챕터와 통과선은 늘 보여야 한다 — 지금 뭘 깨는 중인지, 얼마나 남았는지.
     const stars = config.stars(chapter, score);
-    $('wave').textContent = `CH ${chapter.n} · THREAT ${String(level).padStart(2, '0')}`;
-    $('quota').textContent = cleared ? `/ 통과 · 기록 경신 중` : `/ ${chapter.quota}명 통과`;
-    $('quota-bar').style.width = Math.min(100, score / chapter.quota * 100) + '%';
-    $('quota-bar').style.background = cleared ? '#ffd46b' : '#8d7bff';
-    $('quota-text').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars); $('shield-count').textContent = player.shields; $('pulse-count').textContent = player.pulses;
+    hudText('wave', `CH ${chapter.n} · THREAT ${String(level).padStart(2, '0')}`);
+    hudText('quota', cleared ? `/ 통과 · 기록 경신 중` : `/ ${chapter.quota}명 통과`);
+    hudStyle('quota-bar', 'width', Math.min(100, score / chapter.quota * 100) + '%');
+    hudStyle('quota-bar', 'background', cleared ? '#ffd46b' : '#8d7bff');
+    hudText('quota-text', '★'.repeat(stars) + '☆'.repeat(3 - stars));
+    hudText('shield-count', player.shields);
+    hudText('pulse-count', player.pulses);
     // 버튼 자체가 상태판이다 — 대시는 차오르는 덮개로, 방어막은 켜진 테두리로 알린다.
-    $('dash').style.setProperty('--cd', (player.cooldown / 2.3).toFixed(3));
-    $('shield').classList.toggle('on', player.shield > 0);
-    $('shield').toggleAttribute('data-empty', player.shields <= 0); $('pulse').toggleAttribute('data-empty', player.pulses <= 0);
+    const cd = (player.cooldown / 2.3).toFixed(3);
+    if (hudWas.cd !== cd) { hudWas.cd = cd; $('dash')?.style.setProperty('--cd', cd); }
+    hudClass('shield', 'on', player.shield > 0);
+    hudAttr('shield', 'data-empty', player.shields <= 0);
+    hudAttr('pulse', 'data-empty', player.pulses <= 0);
   }
   function render() {
     PatientZeroVisuals.render(ctx, view, { district, mines, W, H, elapsed, player, humans, medics, infected, bullets, items, rings, particles, floats, shake });

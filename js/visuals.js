@@ -12,6 +12,33 @@ window.PatientZeroVisuals = (() => {
   const lazy = {};
   function image(src) { if (!lazy[src]) { const img = new Image(); img.src = src; lazy[src] = img; } return lazy[src]; }
   const floor = src => { const img = src ? image(src) : images.plaza; return ready(img) ? img : ready(images.plaza) ? images.plaza : null; };
+
+  /* 바닥은 **한 번만 굽고 그다음엔 그대로 붙인다.**
+     전에는 프레임마다 지도 그림을 두 번(배경·세계) 확대해 그리고 그 위에 전면 사각형을 둘 더 칠했다 —
+     약한 기기에서 그 넷이 프레임 비용의 큰 몫이었다(갤럭시 A12 가 ANR 로 죽었다, 2026-10-18).
+     굽는 조건(그림·크기·구역 색)이 그대로면 다시 굽지 않는다. */
+  const plateCache = { key: '', backdrop: null, world: null };
+  function plates(plate, district, vw, vh, W, H) {
+    if (!plate) return null;
+    const key = plate.src + '|' + Math.round(vw) + 'x' + Math.round(vh) + '|' + Math.round(W) + 'x' + Math.round(H) + '|' + (district?.tint || '');
+    if (plateCache.key === key) return plateCache;
+    const make = (w, h, draw) => {
+      const cv = document.createElement('canvas');
+      cv.width = Math.max(1, Math.round(w)); cv.height = Math.max(1, Math.round(h));
+      draw(cv.getContext('2d'), cv.width, cv.height);
+      return cv;
+    };
+    plateCache.key = key;
+    // 배경 — 레터박스까지 덮는 흐린 판. 투명도까지 구워 둔다
+    plateCache.backdrop = make(vw, vh, (g, w, h) => { g.globalAlpha = .35; g.drawImage(plate, 0, 0, w, h); });
+    // 세계 — 바닥 + 어둠 + 구역 색을 한 장으로
+    plateCache.world = make(W, H, (g, w, h) => {
+      g.drawImage(plate, 0, 0, w, h);
+      g.fillStyle = '#08142626'; g.fillRect(0, 0, w, h);
+      if (district?.tint) { g.fillStyle = district.tint; g.fillRect(0, 0, w, h); }
+    });
+    return plateCache;
+  }
   function slice(image, crop, height) {
     const buffer = document.createElement('canvas'); buffer.height = height; buffer.width = Math.ceil(height * crop.w / crop.h);
     buffer.getContext('2d').drawImage(image, crop.x, crop.y, crop.w, crop.h, 0, 0, buffer.width, height); return buffer;
@@ -60,14 +87,13 @@ window.PatientZeroVisuals = (() => {
     const { district, mines = [], W, H, elapsed: t, player, humans, medics, infected, bullets, items, rings, particles, floats, shake } = state;
     const dpr = Math.min(devicePixelRatio || 1, 2); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.fillStyle = '#101722'; c.fillRect(0, 0, v.width, v.height);
     const plate = floor(district?.art);
-    if (plate) { c.globalAlpha = .35; c.drawImage(plate, 0, 0, v.width, v.height); c.globalAlpha = 1; }
+    const baked = plates(plate, district, v.width, v.height, W, H);
+    if (baked) c.drawImage(baked.backdrop, 0, 0);
     c.save(); c.translate(v.x, v.y); c.scale(v.scale, v.scale);
     c.beginPath(); c.rect(0, 0, W, H); c.clip();
     if (shake > 0) c.translate((Math.random() - .5) * shake, (Math.random() - .5) * shake);
-    if (plate) c.drawImage(plate, 0, 0, W, H);
-    else { c.fillStyle = '#29313d'; c.fillRect(0, 0, W, H); }
-    c.fillStyle = '#08142626'; c.fillRect(0, 0, W, H);
-    c.fillStyle=district.tint;c.fillRect(0,0,W,H);
+    if (baked) c.drawImage(baked.world, 0, 0);
+    else { c.fillStyle = '#29313d'; c.fillRect(0, 0, W, H); c.fillStyle = '#08142626'; c.fillRect(0, 0, W, H); if (district?.tint) { c.fillStyle = district.tint; c.fillRect(0, 0, W, H); } }
     for(const m of mines) {glow(c,m.x,m.y,28,'#ff344d44');ellipse(c,m.x,m.y,12,6,'#35212a');c.strokeStyle='#ff6575';c.lineWidth=2;ellipse(c,m.x,m.y,18+Math.sin(t*5)*3,9,'#ff6575',true);}
     if(player.smoke>0){for(let i=0;i<9;i++) {const a=i/9*TAU+t*.3;glow(c,player.x+Math.cos(a)*48,player.y-30+Math.sin(a)*25,66,'#b3bed44a');}}
     if(player.boost>0){c.strokeStyle='#62e7ff';c.lineWidth=2;for(let i=0;i<4;i++){c.beginPath();c.moveTo(player.x-player.dx*(25+i*9),player.y-15-i*7);c.lineTo(player.x-player.dx*(55+i*9),player.y-15-i*7);c.stroke();}}
