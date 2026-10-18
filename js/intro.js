@@ -25,33 +25,66 @@ window.Intro = (() => {
 
   let index = 0, onDone = null, watching = 0, origin = null, step = 0;
 
-  function panel() {
-    const cut = CUTS[index];
-    return `<div class="intro-cut tone-${cut.tone}" data-cut="${cut.art}">
-      <img class="intro-art" src="assets/intro/${cut.art}.webp" alt="">
-      <div class="intro-lines">${cut.lines.map(l => `<p>${l}</p>`).join('')}</div>
-      <div class="intro-foot"><span class="intro-dots">${CUTS.map((_, i) => `<i class="${i === index ? 'on' : ''}"></i>`).join('')}</span>
+  /* 컷을 바꿀 때 **판을 다시 만들지 않는다.** 처음 한 번만 짓고, 그다음부터는 그림 주소와 글만 갈아 끼운다.
+     왜: 탭마다 innerHTML 을 통째로 갈면 1280px WebP 를 매번 새로 디코딩한다.
+     갤럭시 A12 같은 기기에서 건너뛰기를 연타하면 그 일이 쌓여 **3초씩 멈췄다**(2026-10-18 재현).
+     같은 이유로 ① 연타는 묶어서 한 번만 받고 ② 다음 그림을 미리 받아 둔다. */
+  const GAP = 260;            // 이 간격 안의 연타는 한 번으로 본다
+  let last = 0, closing = false;
+
+  function build() {
+    const host = $('intro');
+    host.innerHTML = `<div class="intro-cut" data-cut="">
+      <img class="intro-art" alt="">
+      <div class="intro-lines"></div>
+      <div class="intro-foot"><span class="intro-dots">${CUTS.map(() => '<i></i>').join('')}</span>
         <button class="intro-skip" id="intro-skip">건너뛰기</button></div>
       <span class="intro-tap">화면을 누르면 다음</span>
     </div>`;
+    $('intro-skip').onclick = e => { e.stopPropagation(); finish(); };
+    host.hidden = false;
+  }
+  function preload(n) {           // 다음 컷을 미리 받아 둔다 — 넘길 때 디코딩이 거기서 시작되지 않게
+    const cut = CUTS[n];
+    if (!cut) return;
+    const img = new Image();
+    img.src = 'assets/intro/' + cut.art + '.webp';
   }
   function draw() {
     const host = $('intro');
-    host.innerHTML = panel();
+    const cut = CUTS[index];
+    if (!cut) return;
+    if (!host.querySelector('.intro-cut')) build();
+    const box = host.querySelector('.intro-cut');
+    box.className = 'intro-cut tone-' + cut.tone;
+    box.dataset.cut = cut.art;
+    const art = box.querySelector('.intro-art');
+    const src = 'assets/intro/' + cut.art + '.webp';
+    if (!art.getAttribute('src') || !art.getAttribute('src').endsWith(src)) art.setAttribute('src', src);
+    box.querySelector('.intro-lines').innerHTML = cut.lines.map(l => `<p>${l}</p>`).join('');
+    box.querySelectorAll('.intro-dots i').forEach((dot, i) => dot.className = i === index ? 'on' : '');
     host.hidden = false;
-    $('intro-skip').onclick = e => { e.stopPropagation(); finish(); };
+    preload(index + 1);
   }
-  function next() { if (++index >= CUTS.length) finish(); else draw(); }
+  function next() {
+    const now = Date.now();
+    if (closing || now - last < GAP) return;    // 연타를 묶는다
+    last = now;
+    if (++index >= CUTS.length) finish(); else draw();
+  }
   function finish() {
-    $('intro').hidden = true;
-    $('intro').innerHTML = '';
+    if (closing) return;                        // 두 번 끝내지 않는다
+    closing = true;
+    const host = $('intro');
+    host.hidden = true;
+    host.innerHTML = '';
     markSeen();
     const done = onDone; onDone = null;
     if (done) done();
   }
   function play(after) {
-    index = 0; onDone = after;
-    draw();
+    index = 0; onDone = after; closing = false; last = 0;
+    build(); draw();
   }
 
   /* ── 튜토리얼 ── */

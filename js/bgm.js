@@ -31,14 +31,21 @@ window.BGM = (() => {
   const KICK = [0, 3, 6, 8, 11, 14];     // 16스텝 중 킥이 떨어지는 자리
   const rand = (a, b) => a + Math.random() * (b - a);
 
-  // 리버브용 임펄스 — 지수로 잦아드는 잡음을 직접 굽는다
+  /* 리버브용 임펄스 — 지수로 잦아드는 잡음을 직접 굽는다.
+     **첫 탭이 여기서 멈춘다.** 3.4초 스테레오면 샘플마다 random+pow 를 32만 번 부른다 —
+     갤럭시 A12 에서 몇 초씩 얼어붙었다(2026-10-18 재현). 그래서 셋을 바꿨다:
+       ① 길이를 1.6초까지만 (꼬리가 짧아도 이 곡에선 안 들린다)
+       ② pow 대신 **곱셈 한 번**으로 잦아들게 — 같은 모양의 지수 감쇠다
+       ③ 한 채널만 굽고 다른 채널은 **밀어서** 쓴다 — 난수 호출이 절반이고 좌우도 갈린다 */
   function impulse(ctx, seconds, decay) {
-    const n = Math.max(1, Math.floor(ctx.sampleRate * seconds));
+    const n = Math.max(1, Math.floor(ctx.sampleRate * Math.min(seconds, 1.6)));
     const buf = ctx.createBuffer(2, n, ctx.sampleRate);
-    for (let ch = 0; ch < 2; ch++) {
-      const d = buf.getChannelData(ch);
-      for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, decay);
-    }
+    const left = buf.getChannelData(0), right = buf.getChannelData(1);
+    const step = Math.exp(-decay / n);                                  // 한 샘플 지날 때마다 곱할 값
+    let fall = 1;
+    for (let i = 0; i < n; i++) { left[i] = (Math.random() * 2 - 1) * fall; fall *= step; }
+    const shift = Math.min(n - 1, Math.floor(ctx.sampleRate * .017));   // 17ms 밀어 좌우를 가른다
+    for (let i = 0; i < n; i++) right[i] = left[(i + shift) % n];
     return buf;
   }
 
@@ -274,10 +281,14 @@ window.BGM = (() => {
     apply();
   }
 
+  /* 손짓을 받자마자 **그 자리에서 짓지 않는다.**
+     오디오 그래프 한 벌을 짓는 일(리버브 굽기 · 발진기 수십 개 · 첫 마디 예약)은
+     약한 기기에서 몇 백 ms 를 먹는데, 그게 탭 처리 중에 일어나면 화면이 그대로 얼어붙는다.
+     한 틱 미뤄 두면 탭은 바로 끝나고, 소리는 한 프레임 뒤에 들어온다 — 그 차이는 안 들린다. */
   function arm() {
     if (armed) return;
     armed = true;
-    to(document.body.dataset.mode || 'intro');
+    setTimeout(() => to(document.body.dataset.mode || 'intro'), 0);
   }
 
   function init() {

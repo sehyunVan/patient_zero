@@ -37,7 +37,7 @@ const URL = process.env.TEST_URL || 'http://127.0.0.1:4177';
         await page.screenshot({ path: SHOT('intro-flip.png') });
       }
       await page.click('#intro');
-      await page.waitForTimeout(260);
+      await page.waitForTimeout(320);
     }
     assert.deepEqual(seen, order, '건너뛰지 않으면 다섯 컷을 다 본다');
 
