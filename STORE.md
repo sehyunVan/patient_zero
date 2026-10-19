@@ -205,7 +205,7 @@ npx cap add ios
 
 # 4. 손으로 누르던 설정을 스크립트가 넣는다  ← Xcode 는 닫아 둔 채로
 cd ..
-node tools/ios-setup.mjs --build 2   # 장면(UIScene) · URL 스킴 · 이름 · 가로 고정 · 전체 화면
+node tools/ios-setup.mjs --version 1.0.1 --build 1   # 장면(UIScene) · URL 스킴 · 이름 · 가로 고정 · 전체 화면
                                   #   + 서명 팀 · Sign in with Apple 권한 · 빌드 번호(생략하면 1 올림)
 node tools/ios-icons.mjs          # 앱 아이콘 1024²(알파 없음) · 스플래시 2732²
 
@@ -223,6 +223,9 @@ npx cap open ios
 | 자리 | 할 일 |
 |---|---|
 | Product → Scheme → Edit Scheme → Run → Options | StoreKit Configuration = **None** (결제를 붙인 뒤에만 의미가 있다) |
+
+**「train version "1.0" is closed」가 뜨면** Build 가 아니라 **Version** 을 올려야 한다 —
+`--version 1.0.1`. App Store Connect 에도 그 번호로 버전을 새로 만들어 둬야 제출 칸에 뜬다.
 
 팀 · Sign in with Apple 권한 · 빌드 번호는 `ios-setup.mjs` 가 넣는다 — **Xcode 화면에서 찾을 필요가 없다.**
 확인하고 싶으면 왼쪽 맨 위 파란 **App** 아이콘 → 편집기 왼쪽의 **TARGETS → App** → General·Signing 탭이다.

@@ -184,22 +184,38 @@ if (fs.existsSync(PBX)) {
   else had.push(`DEVELOPMENT_TEAM(이미 ${TEAM} · ${count}곳)`);
 } else had.push('project.pbxproj 없음 — cap add ios 먼저');
 
-/* ⑤ 빌드 번호 — Xcode 의 General → Identity → Build 와 **같은 값**이다(pbxproj 의 CURRENT_PROJECT_VERSION).
-   반려 뒤 다시 낼 때는 Version 은 그대로 두고 이 번호만 올린다 — 같은 번호는 두 번 안 받는다.
-     node tools/ios-setup.mjs --build 2      (생략하면 1 올린다) */
+/* ⑤ 버전 두 가지 — Xcode 의 General → Identity 의 **Version** 과 **Build** 다.
+     Version(MARKETING_VERSION)      = 사람이 보는 1.0 · 1.0.1
+     Build(CURRENT_PROJECT_VERSION)  = 같은 Version 안에서 올리는 번호
+
+   보통은 Build 만 올리면 된다. 그런데 **그 Version 으로는 더 못 올리는 때**가 있다:
+
+     Invalid pre-release train. The train version "1.0" is closed for new build submissions.
+
+   한번 심사에 올라갔다가 닫힌 버전은 빌드를 더 안 받는다 — 그때는 **Version 을 올려야** 한다.
+   App Store Connect 에도 그 번호로 버전을 새로 만들어 두어야 제출 칸에 뜬다.
+
+     node tools/ios-setup.mjs --version 1.0.1 --build 1
+     node tools/ios-setup.mjs --build 3        (Version 은 그대로, Build 만)
+     node tools/ios-setup.mjs                  (Build 를 1 올린다) */
 if (fs.existsSync(PBX)) {
   const src = fs.readFileSync(PBX, 'utf8');
-  const at = process.argv.indexOf('--build');
-  const want = at >= 0 ? Number(process.argv[at + 1]) : null;
-  const cur = Number((src.match(/CURRENT_PROJECT_VERSION = (\d+);/) || [])[1] || 1);
-  const next = want || cur + 1;
-  let out = src.replace(/CURRENT_PROJECT_VERSION = \d+;/g, `CURRENT_PROJECT_VERSION = ${next};`);
+  const arg = name => { const at = process.argv.indexOf(name); return at >= 0 ? process.argv[at + 1] : null; };
+  const wantBuild = Number(arg('--build')) || null;
+  const wantVersion = arg('--version');
+  const curBuild = Number((src.match(/CURRENT_PROJECT_VERSION = (\d+);/) || [])[1] || 1);
+  const curVersion = (src.match(/MARKETING_VERSION = ([^;]+);/) || [])[1] || '1.0';
+  const nextBuild = wantBuild || curBuild + 1;
+  const nextVersion = wantVersion || curVersion;
+  let out = src
+    .replace(/CURRENT_PROJECT_VERSION = \d+;/g, `CURRENT_PROJECT_VERSION = ${nextBuild};`)
+    .replace(/MARKETING_VERSION = [^;]+;/g, `MARKETING_VERSION = ${nextVersion};`);
   if (!/CURRENT_PROJECT_VERSION/.test(src)) {
     out = out.replace(/(\n(\s*)PRODUCT_BUNDLE_IDENTIFIER = [^;]+;)/g, (m, line, indent) =>
-      `${line}\n${indent}CURRENT_PROJECT_VERSION = ${next};\n${indent}MARKETING_VERSION = 1.0;`);
+      `${line}\n${indent}CURRENT_PROJECT_VERSION = ${nextBuild};\n${indent}MARKETING_VERSION = ${nextVersion};`);
   }
   fs.writeFileSync(PBX, out);
-  had.push(`빌드 번호 ${cur} → ${next}`);
+  had.push(`버전 ${curVersion} (${curBuild}) → ${nextVersion} (${nextBuild})`);
 }
 
 /* ⑥ Sign in with Apple — Xcode 의 ＋ Capability 와 같은 일을 파일로 한다.
