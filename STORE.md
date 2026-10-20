@@ -24,7 +24,7 @@
 | 재화 구조 | 모집권(유료) · 검체(무료) · 조각(부산물) — 서로 바뀌지 않는다 | [`ECONOMY.md`](ECONOMY.md) |
 | 가격 모델 | **무료 + 인앱 결제** | **못 바꾼다**(유료/무료는 한 번 정하면 끝) |
 | 심사 문서 URL | `https://copycat.sarl/patient-zero/` (지원) · `…/privacy.html` · `…/delete.html` | 바꿀 수 있다 |
-| 같은 문서의 임시 주소 | `https://home.165-227-196-68.sslip.io/patient-zero/support/` — `tools/deploy.sh` 가 함께 올린다 | 콘솔에는 위 주소를 적는다 |
+| 같은 문서의 임시 주소 | `https://home.64-227-141-147.sslip.io/patient-zero/support/` — `tools/deploy.sh` 가 함께 올린다 | 콘솔에는 위 주소를 적는다 |
 | 화면 방향 | **가로 고정** | 바꿀 수 있다 |
 | 지원 언어 | 한국어 · English · 日本語 (기기 언어 따라감 + 설정에서 수동) | 늘릴 수 있다 |
 
@@ -147,8 +147,8 @@ Apple 콘솔의 Identifiers 목록에서 세 앱이 나란히 보이고, 심사 
   그래서 「Invalid response code: 200」으로 끝났다(실기기에서 잡았다). 안 넘기면 토큰을 그대로 돌려준다.
 - 서버는 네 가지 aud 를 받는다: 구글 웹·구글 iOS·애플 번들·애플 Services ID.
 **애플 콘솔에서 걸린 자리.** Domains 칸은 **도메인만** 받는다 — `https://` 나 경로를 넣으면
-「One or more domains are invalid」로 막힌다. 도메인은 `home.165-227-196-68.sslip.io`,
-Return URL 은 `https://home.165-227-196-68.sslip.io/patient-zero/api/auth/apple` 전체 주소다.
+「One or more domains are invalid」로 막힌다. 도메인은 `home.64-227-141-147.sslip.io`,
+Return URL 은 `https://home.64-227-141-147.sslip.io/patient-zero/api/auth/apple` 전체 주소다.
 
 **웹 흐름을 열면서 배운 것.** 애플은 토큰을 주소 뒤가 아니라 **POST 본문(form_post)** 으로 돌려준다 —
 정적 파일로는 못 받아서 서버가 `POST /api/auth/apple` 로 직접 받는다. 구글은 fragment 라 `oauth.html` 이 받는다.
@@ -368,7 +368,7 @@ mobile/android/              가로 고정(sensorLandscape) · 아이콘 5크기
 | versionCode / versionName | `26101503` / `1.0.1015b` — **같은 번호는 두 번 못 쓴다**(`npm run aab -- --bump`) |
 | 업로드 키 | `C:/Users/sehyu/keys/patientzero-upload.jks` (별칭 `patientzero`) — **저장소 밖** |
 | 업로드 키 SHA-1 | `49:56:3C:9A:22:C5:1A:73:A7:BB:12:D0:D3:B6:2A:90:12:B4:1C:8C` ← 구글 OAuth 콘솔에 넣는다 |
-| 번들에 박힌 서버 주소 | `https://home.165-227-196-68.sslip.io/patient-zero` |
+| 번들에 박힌 서버 주소 | `https://home.64-227-141-147.sslip.io/patient-zero` |
 
 **다시 굽는 순서**
 
@@ -401,7 +401,7 @@ cd mobile && npm run aab              # 굽기 → cap sync → bundleRelease �
 | versionCode / versionName | `26101501` / `1.0.1015` |
 | 업로드 키 | `C:/Users/sehyu/keys/patientzero-upload.jks` (별칭 `patientzero`) — **저장소 밖** |
 | 업로드 키 SHA-1 | `49:56:3C:9A:22:C5:1A:73:A7:BB:12:D0:D3:B6:2A:90:12:B4:1C:8C` ← 구글 OAuth 콘솔에 넣는다 |
-| 번들에 박힌 서버 주소 | `https://home.165-227-196-68.sslip.io/patient-zero` |
+| 번들에 박힌 서버 주소 | `https://home.64-227-141-147.sslip.io/patient-zero` |
 
 **다시 굽는 순서**
 

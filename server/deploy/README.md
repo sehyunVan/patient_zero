@@ -1,13 +1,13 @@
 # 계정 서버 올리는 순서
 
 ```
-1  scp server/{auth.mjs,account.mjs} root@165.227.196.68:/var/www/patient-zero/server/
+1  scp server/{auth.mjs,account.mjs} root@64.227.141.147:/var/www/patient-zero/server/
 2  .env 를 .env.example 대로 채워 같은 폴더에 둔다 (저장소에는 올리지 않는다)
 3  install -m644 deploy/patient-zero-account.service /etc/systemd/system/
    systemctl daemon-reload && systemctl enable --now patient-zero-account
 4  curl -s localhost:4190/api/config   ← 무엇이 켜졌는지 그대로 나온다
 5  Caddyfile 에 deploy/Caddyfile.snippet 을 넣고 `caddy validate` → reload   ← 허락 뒤에
-6  게임 쪽에 주소를 알려 준다: window.PZ_API = 'https://home.165-227-196-68.sslip.io/patient-zero'
+6  게임 쪽에 주소를 알려 준다: window.PZ_API = 'https://home.64-227-141-147.sslip.io/patient-zero'
 ```
 
 **로컬 .env 를 박스로 scp 하지 않는다.** 박스의 .env 에는 저장소에 없는 값(Resend 키)이 들어 있어서,

@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'dist', 'mobile');
 const arg = k => { const i = process.argv.indexOf(k); return i >= 0 ? process.argv[i + 1] : null; };
-const API = arg('--api') || 'https://home.165-227-196-68.sslip.io/patient-zero';
+const API = arg('--api') || 'https://copycat.sarl/patient-zero';
 const CHECK = process.argv.includes('--check');
 
 const mb = n => (n / 1048576).toFixed(2) + 'MB';

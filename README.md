@@ -132,7 +132,7 @@ node promo/capture.mjs --lang en && node promo/render.js --lang en --frames --wo
 
 ## 폰으로 열기 (배포)
 
-**https://home.165-227-196-68.sslip.io/patient-zero/** — 폰 브라우저에서 바로 됩니다.
+**https://home.64-227-141-147.sslip.io/patient-zero/** — 폰 브라우저에서 바로 됩니다.
 
 ```
 bash tools/deploy.sh --dry-run   # 무엇이 올라가는지만 본다

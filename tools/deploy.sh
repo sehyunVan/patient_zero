@@ -15,9 +15,9 @@
 # 폰에서 받는 양을 줄이려고 그림은 전부 WebP 로 굽는다(원본 PNG 는 저장소에만 남는다).
 set -euo pipefail
 
-HOST="${HOST:-root@165.227.196.68}"
+HOST="${HOST:-root@64.227.141.147}"
 DEST="${DEST:-/var/www/home/patient-zero}"
-URL="https://home.165-227-196-68.sslip.io/patient-zero/"
+URL="https://home.64-227-141-147.sslip.io/patient-zero/"
 
 DRY=0
 for a in "$@"; do
