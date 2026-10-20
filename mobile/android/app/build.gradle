@@ -14,8 +14,8 @@ android {
         applicationId "sarl.patientzero.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 26101507
-        versionName "1.0.1015b"
+        versionCode 26102001
+        versionName "1.0.1020"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
