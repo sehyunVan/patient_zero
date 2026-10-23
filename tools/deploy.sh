@@ -10,7 +10,7 @@
 # file_server 가 알아서 /patient-zero/ 로 내준다 — 설정 변경이 필요 없다.
 #
 # 올라가는 것: index/phone.html, style.css, panels.css, manifest.webmanifest, js/*.js, icons/*(store 제외),
-# assets/*.webp, 그리고 심사 문서 세 장(support/).
+# assets/*.webp. 심사 문서 세 장은 제 주소(copycat.sarl/patient-zero/)로 따로 간다.
 # assets/src(원본 PNG)·shots(스크린샷)·test·tools 는 올리지 않는다.
 # 폰에서 받는 양을 줄이려고 그림은 전부 WebP 로 굽는다(원본 PNG 는 저장소에만 남는다).
 set -euo pipefail
@@ -18,6 +18,13 @@ set -euo pipefail
 HOST="${HOST:-root@64.227.141.147}"
 DEST="${DEST:-/var/www/home/patient-zero}"
 URL="https://home.64-227-141-147.sslip.io/patient-zero/"
+# 게임 파일 말고 **다른 두 주소**가 더 있다. 한 박스지만 Caddy 블록이 다르다:
+#   · API — copycat.sarl/patient-zero/api/* → 127.0.0.1:4190. 게임의 PZ_API 가 이 주소다.
+#     home 쪽에는 그 경로가 없다. 거기서 /api/config 를 찔러 404 를 받고 배포가 실패했다(2026-10-23).
+#   · 심사 문서 세 장 — 두 스토어에 **이 주소로** 등록돼 있다.
+API_URL="https://copycat.sarl/patient-zero/"
+DOCS_DEST="${DOCS_DEST:-/var/www/copycat/patient-zero}"
+DOCS_URL="https://copycat.sarl/patient-zero/"
 
 DRY=0
 for a in "$@"; do
@@ -53,10 +60,14 @@ for dir in "$ROOT"/assets/*/; do
   cp "$dir"*.webp "$STAGE/assets/$name/" 2>/dev/null || true
 done
 # 심사 문서 세 장 — 두 스토어가 **URL 로** 요구한다(지원 · 개인정보 · 계정 삭제).
-# site/ 의 스크린샷은 올리지 않는다(한 장이 3MB 다). support/ 로 따로 두는 이유는
-# 게임의 index.html 과 지원 페이지의 index.html 이 같은 자리를 다투기 때문이다.
-mkdir -p "$STAGE/support"
-cp "$ROOT"/site/index.html "$ROOT"/site/privacy.html "$ROOT"/site/delete.html "$ROOT"/site/_style.css "$STAGE/support/"
+# 게임과 **다른 주소**로 간다. 스토어에 그 주소가 적혀 있고, 지원 페이지의 index.html 과
+# 게임의 index.html 이 같은 자리를 다투기 때문이다.
+# 예전엔 게임 쪽에 support/ 로 한 벌 더 올렸다 — 아무도 안 보는 사본이라 낡기만 했다.
+# (Caddyfile 이 같은 함정을 적어 두고 있다: 두 벌이 생기면 심사자는 낡은 쪽을 연다)
+# site/ 의 스크린샷은 올리지 않는다(한 장이 3MB 다).
+DOCS="$(mktemp -d)"
+trap 'rm -rf "$STAGE" "$DOCS"' EXIT
+cp "$ROOT"/site/index.html "$ROOT"/site/privacy.html "$ROOT"/site/delete.html "$ROOT"/site/_style.css "$DOCS/"
 
 # assets 에 PNG 가 남아 있으면 폰이 몇 MB 를 더 받는다 — 올리긴 하되 알려는 준다
 for big in "$ROOT"/assets/*.png; do
@@ -79,6 +90,8 @@ done
 SIZE="$(du -sh "$STAGE" | cut -f1)"
 say "크기 $SIZE"
 ( cd "$STAGE" && find . -type f | sort | sed 's/^/    /' )
+echo "    ── 심사 문서 → $DOCS_URL"
+( cd "$DOCS" && find . -type f | sort | sed 's/^/    /' )
 
 if [ "$DRY" = "1" ]; then say "--dry-run 이라 여기까지"; exit 0; fi
 
@@ -106,13 +119,32 @@ find "\$DEST" -type f -exec chmod 644 {} +
 echo "   올라간 파일 \$(find "\$DEST" -type f | wc -l)개, \$(du -sh "\$DEST" | cut -f1)"
 REMOTE
 
+say "심사 문서 세 장 → $DOCS_DEST"
+tar -czf "$DOCS/docs.tgz" -C "$DOCS" index.html privacy.html delete.html _style.css
+scp -q "$DOCS/docs.tgz" "$HOST:/tmp/patient-zero-docs.tgz"
+ssh "$HOST" bash -se <<REMOTE
+set -euo pipefail
+mkdir -p "$DOCS_DEST"
+tar -xzf /tmp/patient-zero-docs.tgz -C "$DOCS_DEST"
+rm -f /tmp/patient-zero-docs.tgz
+chown -R caddy:caddy "$DOCS_DEST"
+chmod 644 "$DOCS_DEST"/*.html "$DOCS_DEST"/*.css
+REMOTE
+
 say "확인"
 code=$(curl -s -o /dev/null -w '%{http_code}' "$URL")
 echo "    $URL  ->  $code"
 [ "$code" = "200" ] || { echo "열리지 않는다" >&2; exit 1; }
-for f in js/game.js js/expansion.js style.css touch-feedback.css i18n/bundle.js api/config assets/lobby.webp assets/characters.webp assets/infected.webp; do
+for f in js/game.js js/expansion.js style.css touch-feedback.css i18n/bundle.js assets/lobby.webp assets/characters.webp assets/infected.webp; do
   c=$(curl -s -o /dev/null -w '%{http_code}' "$URL$f")
   echo "    $f  ->  $c"
   [ "$c" = "200" ] || { echo "빠진 파일이 있다" >&2; exit 1; }
+done
+# API 와 심사 문서는 **다른 주소**다 — 여기서 틀리면 앱은 로그인이 꺼진 채로 뜨고,
+# 스토어 심사는 열리지 않는 링크를 받는다
+for u in "${API_URL}api/config" "${DOCS_URL}privacy.html" "${DOCS_URL}delete.html" "${DOCS_URL}"; do
+  c=$(curl -s -o /dev/null -w '%{http_code}' "$u")
+  echo "    $u  ->  $c"
+  [ "$c" = "200" ] || { echo "스토어가 보는 주소가 열리지 않는다" >&2; exit 1; }
 done
 say "끝 — 폰에서 $URL"
