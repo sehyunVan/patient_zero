@@ -113,7 +113,7 @@
           (stars < 3 ? `★${stars + 1} 까지 ${goals[stars] - score}명` : '별 셋 — 이 챕터의 최고 성적입니다.') +
           (unlocked && next ? `<br>CHAPTER ${next.n} · ${next.name} 해금` : '')
         : `통과선 ${chapter.quota}명 중 ${score}명 · ${Math.floor(elapsed)}초에 체력 소진<br>${chapter.quota - score}명이 모자랍니다.`),
-      cleared && next && unlocked ? `CHAPTER ${next.n} 로 ↗` : '다시 도전하기 ↗',
+      window.Tour?.armed?.() ? '로비로 ↗' : cleared && next && unlocked ? `CHAPTER ${next.n} 로 ↗` : '다시 도전하기 ↗',
       `작전 보상 · 검체 +${earned.cash}${earned.tickets ? ` · 첫 통과 모집권 +${earned.tickets}` : ''} / 로비에서 챕터를 고를 수 있습니다.`);
     if (unlocked && next) { config.selected = next.n; config.save(); }
     // 첫 전투가 끝나면 결과를 잠깐 보여 주고 **로비로 데려가 한 바퀴 돌린다** — 거기서 처음 보는 화면이라.
@@ -509,7 +509,12 @@
   // 여기 있던 「아직 계정 서버가 없다」 판은 auth.js 가 덮어쓰고 있어 **한 번도 안 돌았다** — 지웠다(2026-10-15).
   $('close-login').onclick = () => $('login-dialog').close();
   $('back-title').onclick=()=>{setMode('intro');$('overlay-title').innerHTML=introMarkup.title;$('overlay-kicker').innerHTML=introMarkup.kicker;$('overlay-copy').innerHTML=introMarkup.copy;$('start').innerHTML=introMarkup.start;$('overlay-note').innerHTML=introMarkup.note;$('overlay').classList.remove('hidden');};
-  $('start').onclick = () => mode === 'intro' ? firstRun() : mode === 'paused' ? togglePause() : start(); $('pause').onclick = togglePause;
+  /* 첫 판이 끝나면 **로비로 데려간다** — 거기서 화면을 한 바퀴 짚어 주기로 했다.
+     이 갈래가 없으면 결과 화면의 단추가 그대로 2라운드를 시작해 버린다(2026-10-23 제보). */
+  $('start').onclick = () => mode === 'intro' ? firstRun()
+    : mode === 'paused' ? togglePause()
+    : (mode === 'over' && window.Tour?.armed?.()) ? (enterLobby(), Tour.start())
+    : start(); $('pause').onclick = togglePause;
   // 액션 버튼은 손가락이 닿는 즉시 — 누르고 떼는 사이의 지연은 회피 게임에서 치명적이다.
   document.querySelectorAll('[data-action]').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); action(b.dataset.action); b.blur(); }));
   $('sound').onclick = () => { sound = !sound; $('sound').querySelector('em').textContent = sound ? 'ON' : 'OFF'; $('sound').setAttribute('aria-label', sound ? '효과음 끄기' : '효과음 켜기'); beep(500); };

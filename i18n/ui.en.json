@@ -750,5 +750,9 @@
  "모집권은 캐릭터 모집에만, 검체는 아이템 상점에서 씁니다.": "Recruitment Tickets are only for Character Recruitment; Specimens are used in the ITEMS Shop.",
  "캐릭터 · 인벤토리 · 임무 · 교환소는 아래쪽입니다.": "Characters · Inventory · MISSIONS · Exchange are at the bottom.",
  "준비됐으면 출격. 한 판은 90초입니다.": "Ready? Deploy. Each run lasts 90 sec.",
- "로그인이 끝나지 않았습니다 — 계정을 골랐는데 돌아오지 않으면 서명 지문(SHA-1) 등록을 확인하세요. (${})": "Log In not completed — if you chose an Account and did not return, check the signing fingerprint (SHA-1) registration. (${})"
+ "로그인이 끝나지 않았습니다 — 계정을 골랐는데 돌아오지 않으면 서명 지문(SHA-1) 등록을 확인하세요. (${})": "Log In not completed — if you chose an Account and did not return, check the signing fingerprint (SHA-1) registration. (${})",
+ "애플이 로그인을 끝내지 못했습니다. 기기에 Apple 계정이 로그인돼 있는지 확인해 주세요. 계속 같으면 앱의 Sign in with Apple 권한 문제입니다.": "Apple couldn't complete sign-in. Check that an Apple Account is signed in on this device. If it persists, it's an issue with the app's Sign in with Apple permission.",
+ "앱에서는 준비 중": "Preparing in app",
+ "조금 전에 보낸 코드가 아직 살아 있습니다. 메일함을 확인하세요. ${}초 뒤에 다시 보낼 수 있습니다.": "The code sent just now is still valid. Check your inbox. You can resend it in ${} sec.",
+ "로비로 ↗": "To Lobby ↗"
 }

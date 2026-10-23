@@ -141,8 +141,18 @@ window.Auth = (() => {
     const mail = $('login-mail-form');
     if (mail) mail.onsubmit = async e => {
       e.preventDefault();
+      const button = mail.querySelector('button');
+      if (button && button.disabled) return;          // 두 번 눌러 두 번 보내지 않는다
+      if (button) button.disabled = true;
       try { await mailCode($('login-email').value); open('code'); }
-      catch (err) { open('start', '코드를 보내지 못했습니다 — ' + err.message); }
+      catch (err) {
+        /* **「too-soon」은 실패가 아니다.** 60초 안에 또 부르면 서버가 그렇게 답하는데,
+           그건 **앞서 보낸 코드가 이미 가 있다**는 뜻이다. 그걸 오류로 그리면
+           「코드는 왔는데 화면은 못 보냈다고 한다」가 된다(2026-10-23 실기기 제보). */
+        const soon = /^too-soon:(\d+)/.exec(err.message || '');
+        if (soon) open('code', '조금 전에 보낸 코드가 아직 살아 있습니다. 메일함을 확인하세요. ' + soon[1] + '초 뒤에 다시 보낼 수 있습니다.');
+        else open('start', '코드를 보내지 못했습니다 — ' + err.message);
+      } finally { if (button && button.isConnected) button.disabled = false; }
     };
     const code = $('login-code-form');
     if (code) code.onsubmit = async e => {
@@ -180,6 +190,12 @@ window.Auth = (() => {
       if (m === 'cancelled') return open('start', '');
       if (m.startsWith('cancelled-native')) {
         return open('start', '로그인이 끝나지 않았습니다 — 계정을 골랐는데 돌아오지 않으면 서명 지문(SHA-1) 등록을 확인하세요. (' + m.slice(17) + ')');
+      }
+      /* 애플이 주는 포괄 오류 — 무엇이 틀렸는지 애플은 말해 주지 않는다.
+         실제로 걸리는 자리는 둘뿐이었다: 기기에 Apple 계정이 없거나,
+         앱에 Sign in with Apple **권한**이 안 실렸거나(프로비저닝 프로필에 없다). */
+      if (/AuthorizationError|ASAuthorization/i.test(m)) {
+        return open('start', '애플이 로그인을 끝내지 못했습니다. 기기에 Apple 계정이 로그인돼 있는지 확인해 주세요. 계속 같으면 앱의 Sign in with Apple 권한 문제입니다.');
       }
       open('start', '로그인하지 못했습니다 — ' + m);
     }

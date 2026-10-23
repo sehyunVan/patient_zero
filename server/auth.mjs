@@ -158,14 +158,17 @@ export function sweepCodes(){ const t=now(); for(const [e,c] of codes) if(t>c.ex
 /* ── 메일 보내기 ──────────────────────────────────────────
    키가 없으면 **보내지 않고 그렇다고 말한다**. 조용히 성공한 척하면
    「메일이 안 와요」가 영영 안 풀린다(copycat 이 그 구간에서 하루를 썼다). */
+/* 메일에 적히는 앱 이름. **이 파일은 막차 이후에서 가져온 것**이라 그 이름이 박혀 있었고,
+   최초 감염자 이용자에게 「막차 이후 — 확인 코드」가 날아갔다(2026-10-23). 환경에서 받는다. */
+export const APP_NAME = process.env.MAIL_APP_NAME || '막차 이후';
 export async function sendCode(email,code,{fetchImpl=fetch}={}){
   const key=process.env.RESEND_API_KEY||'';
-  const from=process.env.MAIL_FROM||'막차 이후 <noreply@copycat.sarl>';
+  const from=process.env.MAIL_FROM||(APP_NAME+' <noreply@copycat.sarl>');
   if(!key) return {sent:false,why:'no-key'};
   const r=await fetchImpl('https://api.resend.com/emails',{
     method:'POST',
     headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
-    body:JSON.stringify({from,to:[email],subject:`막차 이후 — 확인 코드 ${code}`,text:codeText(code),html:codeHtml(code)}),
+    body:JSON.stringify({from,to:[email],subject:`${APP_NAME} — 확인 코드 ${code}`,text:codeText(code),html:codeHtml(code)}),
     signal:AbortSignal.timeout(10000),
   });
   if(!r.ok){ let d=''; try{ d=(await r.text()).slice(0,200); }catch(e){}
@@ -174,13 +177,13 @@ export async function sendCode(email,code,{fetchImpl=fetch}={}){
 }
 const codeText=c=>`확인 코드 ${c}
 
-막차 이후에 들어오려면 이 여섯 자리를 적으십시오.
+${APP_NAME}에 들어오려면 이 여섯 자리를 적으십시오.
 ${Math.round(CODE_TTL/60e3)}분 뒤에는 쓸 수 없습니다.
 
 이 메일을 요청한 적이 없다면 그냥 버리십시오 — 아무 일도 일어나지 않습니다.`;
 const codeHtml=c=>`<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#070a11;color:#eaf4ff;padding:32px">
 <div style="max-width:420px;margin:0 auto;border:1px solid #1b2a40;border-radius:4px;padding:28px 26px;background:#0a1220">
-<div style="letter-spacing:.22em;font-size:11px;color:#5c6b80">NIGHT TRANSIT</div>
+<div style="letter-spacing:.22em;font-size:11px;color:#5c6b80">${APP_NAME}</div>
 <div style="font-size:19px;margin:14px 0 20px">확인 코드</div>
 <div style="font-size:34px;letter-spacing:.3em;font-weight:600;color:#ffd43b">${c}</div>
 <p style="color:#9bb0c6;font-size:13px;line-height:1.7;margin:22px 0 0">

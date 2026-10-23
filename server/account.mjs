@@ -151,8 +151,12 @@ export const handlers = {
     const issued = issueCode(email);
     if (issued.wait) return bad(res, 'too-soon:' + issued.wait, 429);
     if (issued.code) {
-      try { await sendCode(email, issued.code); }
+      // sendCode 는 **던지지 않고** {sent:false,why} 를 돌려준다. 그걸 안 보고
+      // sent:true 로 답하던 동안, 레진드가 거절한 메일도 「보냈습니다」로 보였다(2026-10-23).
+      let out;
+      try { out = await sendCode(email, issued.code); }
       catch (e) { return bad(res, 'send-failed:' + e.message, 502); }
+      if (out && out.sent === false) return bad(res, 'send-failed:' + out.why, 502);
     }
     return json(res, 200, { sent: true, resendIn: CODE_RESEND_MS });
   },
