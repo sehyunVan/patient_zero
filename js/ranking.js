@@ -5,18 +5,40 @@
    계정 서버(server/account.mjs)의 순위표를 그대로 보여 준다. 서버가 없거나 못 닿으면
    **지어내지 않는다** — 가짜 상대를 깔면 제 실력을 잘못 읽게 된다. 이 기기의 기록만 보여 주고
    무엇이 없어서 비었는지 그대로 적는다.
-     GET  /api/rank   → [{ name, avatar, score, chapter, mine }, …] (점수 내림차순, 상위 50)
-     POST /api/rank   → { score, chapter, name, avatar }   **로그인한 사람만**
+     GET  /api/rank          → [{ name, avatar, score, chapter, mine }, …] (점수 내림차순, 상위 50)
+     POST /api/rank          → { score, chapter, name, avatar, guest }
+     POST /api/rank/forget   → { guest }   내 줄 내리기
 
-   비로그인은 **보기만 한다** — 남의 순위는 보이고, 제 기록은 나가지 않는다(2026-10-15 결정).
-   올리는 쪽을 끄는 스위치는 없다. 로그인하면 이름과 대표 캐릭터가 공개된다 —
-   그 사실이 site/privacy.html 에 적혀 있다. */
+   **2026-10-23 — 비로그인도 올린다.** 그 전까지는 로그인한 사람만 올렸고(2026-10-15 결정),
+   그래서 열 달 만에 순위에 선 사람이 둘(그중 하나는 만든 사람)이었다. 로그인을 문턱으로 두면
+   순위는 비어 있고, 빈 순위는 아무도 두 번 열지 않는다.
+   계정이 없으면 **이 기기**가 제 줄을 짚는다(아래 GUEST). 기본은 올리는 쪽이다 — 끄는 설정이 아니라
+   기본값이고, 내리는 길은 순위 탭의 단추 하나다. 이름과 대표 캐릭터가 공개된다는 사실과
+   내리는 방법이 site/privacy.html 에 적혀 있어야 한다. 둘은 같이 고친다. */
 window.Ranking = (() => {
   // 주소는 로그인과 같은 서버에서 온다(js/auth.js 의 PZ_API). 따로 적어 두면 언젠가 어긋난다.
   const api = () => (window.PZ_API || localStorage.getItem('patient-zero-api') || '').replace(/\/$/, '');
   const ENDPOINT = () => (api() ? api() + '/api/rank' : '');
   const PROFILE = 'patient-zero-profile-v1';
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  /* ── 이 기기 — 계정이 없는 사람의 줄을 짚는 값 ──
+     여기서 한 번 만들어 이 기기에만 남는다. 서버는 이걸 해시해서만 들고 있다.
+     off 는 「내렸다」는 표시다. 서버에서 줄을 지우기만 하면 다음 판이 끝날 때 다시 올라가서
+     내린 적이 없는 것과 같아진다 — 그래서 올리는 쪽도 같이 멈춰야 한다. */
+  const GUEST = 'patient-zero-guest-v1';
+  const guest = () => { try { return JSON.parse(localStorage.getItem(GUEST) || '{}'); } catch { return {}; } };
+  const setGuest = o => { try { localStorage.setItem(GUEST, JSON.stringify({ ...guest(), ...o })); } catch {} };
+  function guestId() {
+    const g = guest();
+    if (g.id) return g.id;
+    const raw = crypto?.randomUUID ? crypto.randomUUID()
+      : 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
+    const id = String(raw).replace(/[^A-Za-z0-9._-]/g, '');   // 서버가 받는 글자만 (8~64자)
+    setGuest({ id });
+    return id;
+  }
+  const listed = () => guest().off !== true;
 
   const myName = () => {
     try { return JSON.parse(localStorage.getItem(PROFILE) || '{}').name || 'INFECTED_01'; }
@@ -126,11 +148,20 @@ window.Ranking = (() => {
     host.innerHTML = '<p class="dialog-note">불러오는 중…</p>';
     fetchBoard().then(rows => {
       if (rows) {
-        // 로그인하지 않은 사람에게는 제 기록이 올라가지 않는다는 걸 말해 준다 — 모르고 지나가면 안 되는 사실이다
-        const signed = !!window.Auth?.token?.();
+        /* 올라가는 중인지 내렸는지를 그 자리에서 말하고, 바꾸는 단추도 같은 문장 안에 둔다.
+           무엇이 공개되는지 모르고 지나가면 안 되는데, 로그인이 문턱이 아니게 된 뒤로는
+           알려 줄 자리가 여기뿐이다 — 설정에 또 하나 만들지 않는다. */
         host.innerHTML = board(rows) +
           '<p class="dialog-note">챕터와 상관없이 가장 높은 기록 하나로 줄을 세우고, 상위 ' + TOP + '위까지 보여 줍니다.</p>' +
-          (signed ? '' : '<p class="dialog-note">로그인하면 당신의 기록도 이 줄에 들어갑니다. 지금은 보기만 합니다 — 이 기기의 기록은 나가지 않습니다.</p>');
+          (listed()
+            ? '<p class="dialog-note">한 판이 끝나면 당신의 기록도 이 줄에 들어갑니다 — 표시 이름과 대표 캐릭터가 공개됩니다. <button type="button" class="rank-listing" data-listing="off">내 기록 내리기</button></p>'
+            : '<p class="dialog-note">당신의 기록은 이 줄에 올라가지 않습니다. <button type="button" class="rank-listing" data-listing="on">다시 올리기</button></p>');
+        const b = host.querySelector('[data-listing]');
+        if (b) b.onclick = () => {
+          const back = b.dataset.listing === 'on';
+          b.disabled = true;
+          (back ? relist() : forget()).then(() => renderBoard(host));
+        };
         return;
       }
       // 서버가 없다. 있는 것만 보여 주고, 없는 이유를 적는다.
@@ -162,18 +193,35 @@ window.Ranking = (() => {
     });
   }
 
-  // 서버가 생기면 판이 끝날 때마다 이걸 불러 올리면 된다
-  // 판이 끝날 때마다 game.js 가 부른다. **로그인하지 않았으면 아무것도 보내지 않는다.**
+  // 판이 끝날 때마다 game.js 가 부른다. 로그인은 필요 없다 — 내렸거나(off) 기록이 0이면 안 보낸다.
   function submit() {
-    const url = ENDPOINT(), token = window.Auth?.token?.();
-    if (!url || !token) return Promise.resolve(false);
+    const url = ENDPOINT();
+    if (!url || !listed()) return Promise.resolve(false);
     const me = myBest();
     if (!me.score) return Promise.resolve(false);
+    const token = window.Auth?.token?.();
     return fetch(url, {
-      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-      body: JSON.stringify({ score: me.score, chapter: me.chapter, name: me.name, avatar: me.avatar }),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+      // 로그인한 뒤에도 기기 id 를 같이 보낸다 — 손님으로 올려 둔 줄을 서버가 계정 줄로 합친다
+      body: JSON.stringify({ score: me.score, chapter: me.chapter, name: me.name, avatar: me.avatar, guest: guestId() }),
     }).then(r => r.ok).catch(() => false);
   }
 
-  return { panel, wire, submit, myBest, online: () => !!ENDPOINT() };
+  /* 내리기 — 서버의 내 줄을 지우고 다음 판부터 올리지 않는다. 서버에 못 닿아도 올리는 쪽은 멈춘다 */
+  function forget() {
+    setGuest({ off: true });
+    const url = ENDPOINT();
+    if (!url) return Promise.resolve(false);
+    const token = window.Auth?.token?.();
+    return fetch(url + '/forget', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+      body: JSON.stringify({ guest: guestId() }),
+    }).then(r => r.ok).catch(() => false);
+  }
+  // 다시 올리기 — 끄고 켜는 스위치가 아니라, 내린 것을 되돌리는 한 걸음이다
+  const relist = () => { setGuest({ off: false }); return submit(); };
+
+  return { panel, wire, submit, forget, relist, listed, myBest, online: () => !!ENDPOINT() };
 })();

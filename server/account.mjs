@@ -22,6 +22,15 @@ const PORT = Number(process.env.PORT) || 4190;
 const DATA = process.env.DATA || path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), 'data/accounts.json');
 const SESSION_DAYS = 180;
 const RANK_TOP = 50;        // 그 아래는 줄만 길어지고 아무도 안 본다 — 화면(js/ranking.js)과 같은 수
+/* ── 비로그인 제출 (2026-10-23 결정) ──
+   계정 없이도 줄에 선다. 열기 전까지 순위에 선 사람은 나 혼자였다 — 로그인한 사람이 둘뿐이었으니까.
+   계정이 없으면 기기가 제 줄을 짚는다. 구글·애플이 대신 쳐 주던 울타리가 없어지니 셋을 직접 친다:
+     1) 기기 하나 = 줄 하나   2) 한 주소에서 시간당 몇 번까지   3) 손님 줄 총량 상한 */
+const GUEST_MAX = 2000;           // 넘으면 가장 낮은 손님 줄부터 밀려난다
+const GUEST_PER_IP_HOUR = 30;     // 한 판이 90초다 — 시간당 30판은 사람이 낼 수 있는 한계를 이미 넘는다
+/* 점수 상한. 계정만 올릴 때는 상한을 안 두기로 했었다(2026-10-15) — 구글 계정이 문턱이었으니까.
+   문턱을 없앴으니 터무니없는 숫자는 막는다. 가장 어려운 챕터의 통과선이 665명이라 진짜 기록은 여기 못 닿는다. */
+const SCORE_CEILING = 100000;
 const sha = s => crypto.createHash('sha256').update(String(s)).digest('hex');
 
 /* ── 저장 — 작은 JSON 한 장. 쓸 때는 임시 파일에 쓰고 바꿔치기한다(쓰다 만 파일이 남지 않게) ── */
@@ -65,6 +74,33 @@ function bearer(req) {
   return db.accounts[s.id] || null;
 }
 const profile = a => ({ id: a.id, email: a.email, ways: a.ways, created: a.created });
+
+/* ── 손님(비로그인) ──
+   기기 id 는 브라우저가 만든 uuid 다. 그대로 쥐고 있지 않고 해시해서 쓴다 — 저장이 새는 날에도
+   어느 기기였는지 되짚을 수 없게. 계정 id 는 24자리 16진수이므로 'g:' 가 붙은 열은 섞이지 않는다. */
+const GUEST_ID = /^[A-Za-z0-9._-]{8,64}$/;
+const guestKey = id => 'g:' + sha(id).slice(0, 24);
+const keyFor = (account, guest) => account ? account.id
+  : (GUEST_ID.test(String(guest || '').trim()) ? guestKey(String(guest).trim()) : null);
+/* 주소는 Caddy 를 거쳐 오므로 소켓이 아니라 X-Forwarded-For 가 진짜다 */
+const ipOf = req => String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket?.remoteAddress || '?';
+const hits = new Map();   // 주소 → 최근 제출 시각들. 메모리에만 둔다 — 서버가 뜨면 비는 게 맞다
+function flooded(ip) {
+  const now = Date.now();
+  const keep = (hits.get(ip) || []).filter(t => now - t < 3600e3);
+  keep.push(now);
+  hits.set(ip, keep);
+  if (hits.size > 5000) for (const [k, v] of hits) if (!v.some(t => now - t < 3600e3)) hits.delete(k);
+  return keep.length > GUEST_PER_IP_HOUR;
+}
+/* 손님 줄이 상한을 넘으면 가장 낮은 것부터 밀어낸다. 계정 줄은 건드리지 않는다 */
+function trimGuests() {
+  const gs = Object.entries(db.ranks).filter(([k]) => k.startsWith('g:'));
+  if (gs.length <= GUEST_MAX) return;
+  gs.sort((a, b) => a[1].score - b[1].score)
+    .slice(0, gs.length - GUEST_MAX)
+    .forEach(([k]) => { delete db.ranks[k]; });
+}
 
 /* ── HTTP ── */
 const json = (res, code, body) => { res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'content-type,authorization', 'Access-Control-Allow-Methods': 'GET,POST,PUT,OPTIONS' }); res.end(JSON.stringify(body)); };
@@ -178,29 +214,57 @@ export const handlers = {
     return json(res, 200, { ok: true });
   },
   /* ── 순위 ──────────────────────────────────────────────────────
-     로그인한 사람만 올린다. 계정당 **최고 기록 한 줄**만 남긴다(기록 목록이 아니다).
-     점수는 브라우저가 보내는 숫자라 그대로 믿는다 — 상한을 두지 않기로 했다(2026-10-15 결정).
-     그래서 여기서 하는 일은 「숫자인가」까지다. 나중에 이상한 줄이 보이면 그때 자르면 된다.
-     이름과 아이콘은 **공개된다.** 끄는 스위치는 없다 — 개인정보처리방침에 그대로 적혀 있어야 한다. */
+     로그인했으면 계정 줄, 안 했으면 기기 줄. 어느 쪽이든 **최고 기록 한 줄**만 남긴다(기록 목록이 아니다).
+     이름과 아이콘은 **공개된다.** 내리는 길은 아래 /api/rank/forget 하나뿐이고,
+     그 사실이 site/privacy.html 에 적혀 있어야 한다. */
   'POST /api/rank': async (req, res) => {
     const account = bearer(req);
-    if (!account) return bad(res, 'unauthorized', 401);
-    const { score, chapter, name, avatar } = await body(req);
+    const { score, chapter, name, avatar, guest } = await body(req);
+    const key = keyFor(account, guest);
+    if (!key) return bad(res, 'unauthorized', 401);
+    // 울타리는 손님에게만. 계정은 구글·애플이 이미 사람 하나를 보증한다
+    if (!account && flooded(ipOf(req))) return bad(res, 'too-many', 429);
     const n = Number(score);
-    if (!Number.isFinite(n) || n < 0) return bad(res, 'bad-score');
+    if (!Number.isFinite(n) || n < 0 || n > SCORE_CEILING) return bad(res, 'bad-score');
     const row = {
-      id: account.id,
+      id: key,
+      ...(account ? {} : { guest: true }),
       name: String(name || '').trim().slice(0, 16) || 'INFECTED',
       avatar: String(avatar || 'zero').replace(/[^a-z0-9-]/gi, '').slice(0, 24) || 'zero',
       score: Math.floor(n),
       chapter: Math.max(1, Math.floor(Number(chapter) || 1)),
       at: Date.now(),
     };
-    const prev = db.ranks[account.id];
+    /* 손님으로 올려 두고 나중에 로그인한 사람 — 같은 기기의 손님 줄을 계정 줄로 합친다.
+       안 합치면 한 사람이 두 줄로 선다. 손님 쪽 기록이 더 높으면 그걸 들고 간다. */
+    if (account) {
+      const gk = keyFor(null, guest);
+      const g = gk && db.ranks[gk];
+      if (g) {
+        if (g.score > row.score) { row.score = g.score; row.chapter = g.chapter; }
+        delete db.ranks[gk];
+      }
+    }
+    const prev = db.ranks[key];
     // 최고 기록만 남긴다. 낮은 기록이 와도 이름·아이콘은 최신으로 바꿔 준다(프로필을 고쳤을 수 있다)
-    db.ranks[account.id] = (prev && prev.score > row.score) ? { ...prev, name: row.name, avatar: row.avatar } : row;
+    db.ranks[key] = (prev && prev.score > row.score) ? { ...prev, name: row.name, avatar: row.avatar } : row;
+    if (!account) trimGuests();
     save();
-    return json(res, 200, { best: db.ranks[account.id].score });
+    return json(res, 200, { best: db.ranks[key].score });
+  },
+  /* 내 줄 내리기 — 계정이 없는 사람도 올린 것을 되돌릴 수 있어야 한다(Play 데이터 삭제 정책).
+     계정 삭제가 같은 일을 하지만, 순위만 내리고 계속 하고 싶을 수 있다.
+     기기 id 는 이 기기 말고는 아무도 모르는 값이라, 그걸 아는 것이 곧 제 줄이라는 증거다. */
+  'POST /api/rank/forget': async (req, res) => {
+    const account = bearer(req);
+    const { guest } = await body(req);
+    const key = keyFor(account, guest);
+    if (!key) return bad(res, 'unauthorized', 401);
+    if (!account && flooded(ipOf(req))) return bad(res, 'too-many', 429);
+    const had = !!db.ranks[key];
+    delete db.ranks[key];
+    if (had) save();
+    return json(res, 200, { removed: had });
   },
   // 공개 — 로그인하지 않아도 볼 수 있다. 토큰을 주면 제 줄에 표시가 붙는다.
   'GET /api/rank': async (req, res) => {

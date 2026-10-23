@@ -99,7 +99,8 @@
     config.history = config.history.slice(0, 8);
     try { localStorage.setItem('patient-zero-runs-v2', JSON.stringify(config.history)); } catch {}
     showBest();
-    // 한 판이 끝나면 기록을 올린다 — 로그인하지 않았으면 Ranking.submit 이 스스로 아무것도 하지 않는다
+    // 한 판이 끝나면 기록을 올린다 — 로그인은 필요 없다(2026-10-23). 순위에서 내린 사람이면
+    // Ranking.submit 이 스스로 아무것도 하지 않는다
     window.Ranking?.submit?.();
     const next = config.chapters.find(c => c.n === chapter.n + 1);
     const starRow = '★'.repeat(stars) + '☆'.repeat(3 - stars);

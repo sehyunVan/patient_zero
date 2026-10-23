@@ -15,7 +15,10 @@
 # 폰에서 받는 양을 줄이려고 그림은 전부 WebP 로 굽는다(원본 PNG 는 저장소에만 남는다).
 set -euo pipefail
 
-HOST="${HOST:-root@64.227.141.147}"
+# ssh 별칭을 쓴다(~/.ssh/config 의 `blr` — 키가 `id_ed25519_blr` 로 못 박혀 있다).
+# 생주소 `root@64.227.141.147` 로 부르면 그 지정이 빠져 ssh 가 기본 키들을 차례로 들이밀고,
+# 서버가 그 전에 연결을 끊는다 — 증상이 **「scp: Connection closed」** 라 네트워크 탓으로 보인다(2026-10-23 에 세 번 당했다).
+HOST="${HOST:-blr}"
 DEST="${DEST:-/var/www/home/patient-zero}"
 URL="https://home.64-227-141-147.sslip.io/patient-zero/"
 # 게임 파일 말고 **다른 두 주소**가 더 있다. 한 박스지만 Caddy 블록이 다르다:

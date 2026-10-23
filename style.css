@@ -1516,6 +1516,11 @@ body:not([data-mode=intro]) #title-settings{display:none}
   .rank-row small{width:78px}
 }
 .rank-cut{padding:7px 10px;font:8px monospace;letter-spacing:1px;color:#8b97a6;text-align:center;border-bottom:1px solid #ffffff12}
+/* 순위 등재를 내리거나 되돌리는 단추 — 설정에 있지 않고 그 사실을 알리는 문장 안에 있다 */
+.rank-listing{margin-left:4px;padding:3px 7px;font:inherit;font-size:9px;letter-spacing:.3px;color:#cfe0ee;
+  background:#ffffff0f;border:1px solid #ffffff24;border-radius:2px;cursor:pointer}
+.rank-listing:hover{background:#ffffff1c;border-color:#ffffff3d}
+.rank-listing:disabled{opacity:.5;cursor:default}
 
 /* 로비 한 바퀴(js/tour.js) — 네 장의 판으로 구멍을 둘러싼다. 가운데는 진짜로 비어 있다. */
 #tour{position:fixed;inset:0;z-index:70}
